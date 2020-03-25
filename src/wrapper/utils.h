@@ -11,7 +11,7 @@
 
 #define CONNECTION_TEST_DEFAULT_CNAME "conn_test_zzz"
 
-#define API_CALL_APPID ""
+#define API_CALL_APPID "Your Own APPID"
 
 #if defined(__linux__) && !defined(__ANDROID__)
 #include <syscall.h>

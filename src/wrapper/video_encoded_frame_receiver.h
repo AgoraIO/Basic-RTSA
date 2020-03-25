@@ -20,12 +20,17 @@ class VideoEncodedFrameReceiver : public agora::rtc::IVideoEncodedImageReceiver 
       const uint8_t* imageBuffer, size_t length,
       const agora::rtc::EncodedVideoFrameInfo& videoEncodedFrameInfo) override;
 
- private:
-  void saveFile(const uint8_t* imageBuffer, size_t length);
+ public:
+  void SetVerbose(bool verbose);
+  int GetReceivedVideoFrames() { return received_encoded_video_frames_; }
 
  private:
-  int frameNum_;
-  int receivedBytes_;
-  int recvEncodedVideoImage_{0};
-  FILE* file_ = nullptr;
+  void writeEncodedVideoFrame(const uint8_t* imageBuffer, size_t length);
+
+ private:
+  FILE* file_;
+  bool verbose_;
+  bool save_file_;
+  int received_total_bytes_;
+  int received_encoded_video_frames_{0};
 };

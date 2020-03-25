@@ -20,8 +20,8 @@ class MediaPacketReceiver : public agora::rtc::IMediaPacketReceiver,
 
   virtual ~MediaPacketReceiver();
 
+  void SetVerbose(bool verbose);
   size_t GetReceivedMediaPacketBytes() { return received_media_packet_bytes_; }
-
   size_t GetReceivedControlPacketBytes() { return received_control_packet_bytes_; }
 
  public:
@@ -33,6 +33,7 @@ class MediaPacketReceiver : public agora::rtc::IMediaPacketReceiver,
   bool onMediaControlPacketReceived(const uint8_t* packet, size_t length) override;
 
  private:
+  bool verbose_{false};
   size_t received_media_packet_bytes_{0};
   size_t received_control_packet_bytes_{0};
 };

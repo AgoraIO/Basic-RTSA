@@ -18,6 +18,10 @@ MediaPacketReceiver::MediaPacketReceiver() = default;
 
 MediaPacketReceiver::~MediaPacketReceiver() = default;
 
+void MediaPacketReceiver::SetVerbose(bool verbose){
+  verbose_ = verbose;
+}
+
 bool MediaPacketReceiver::onMediaPacketReceived(const uint8_t* packet, size_t length) {
   int position = static_cast<int>(packet[0]) | (static_cast<int>(packet[1]) << 8) |
                  (static_cast<int>(packet[2]) << 16) | (static_cast<int>(packet[3]) << 24);
@@ -30,7 +34,7 @@ bool MediaPacketReceiver::onMediaPacketReceived(const uint8_t* packet, size_t le
       audioTest = false;
       break;
     default:
-      printf("Media Packet Received fail: invalid format\n");
+      AGO_LOG("Media Packet Received fail: invalid format\n");
       return false;
   }
   int i = 4;
@@ -39,14 +43,17 @@ bool MediaPacketReceiver::onMediaPacketReceived(const uint8_t* packet, size_t le
     i++;
   }
 
-  if (!valid) printf("Media Packet Fail: invalid data ...\n");
+  if (!valid) AGO_LOG("Media Packet Fail: invalid data ...\n");
 
   received_media_packet_bytes_ += length;
 
-  if (audioTest)
-    printf("Audio Media Packet Recv: position -> %d, length -> %zu\n", position, length);
-  else
-    printf("Video Media Packet Recv: position -> %d, length -> %zu\n", position, length);
+  if (verbose_) {
+    if (audioTest) {
+      AGO_LOG("Audio Media Packet Recv: position -> %d, length -> %zu\n", position, length);
+    } else {
+      AGO_LOG("Video Media Packet Recv: position -> %d, length -> %zu\n", position, length);
+    }
+  }
 
   return true;
 }
@@ -63,7 +70,7 @@ bool MediaPacketReceiver::onMediaControlPacketReceived(const uint8_t* packet, si
     case 0x06:
       break;
     default:
-      printf("Media Control Packet Received fail: invalid format\n");
+      AGO_LOG("Media Control Packet Received fail: invalid format\n");
       return false;
   }
   int i = 4;
@@ -72,22 +79,22 @@ bool MediaPacketReceiver::onMediaControlPacketReceived(const uint8_t* packet, si
     i++;
   }
 
-  if (!valid) printf("Media Control Packet Fail: invalid data ...\n");
-  switch (controlType) {
+  if (!valid) AGO_LOG("Media Control Packet Fail: invalid data ...\n");
+  if (verbose_) {
+    switch (controlType) {
     case 0x02:
       printf("Audio Media Control Packet Recv: position -> %d, length -> %zu\n", position, length);
       break;
     case 0x03:
-      printf("Audio Media Broadcast Control Packet Recv: position -> %d, length -> %zu\n", position,
-             length);
+      printf("Audio Media Broadcast Control Packet Recv: position -> %d, length -> %zu\n", position, length);
       break;
     case 0x05:
       printf("Video Media Control Packet Recv: position -> %d, length -> %zu\n", position, length);
       break;
     case 0x06:
-      printf("Video Media Broadcast Control Packet Recv: position -> %d, length -> %zu\n", position,
-             length);
+      printf("Video Media Broadcast Control Packet Recv: position -> %d, length -> %zu\n", position, length);
       break;
+    }
   }
   received_control_packet_bytes_ += length;
 

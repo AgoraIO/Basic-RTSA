@@ -20,14 +20,16 @@ struct ConnectionConfig {
   int maxPort = 0;
   size_t numberOfChannels_ = 2;
   uint32_t sampleRateHz_ = 48000;
-  agora::rtc::CLIENT_ROLE_TYPE clientRoleType;
+  agora::rtc::CLIENT_ROLE_TYPE clientRoleType = agora::rtc::CLIENT_ROLE_BROADCASTER;
   bool subscribeAllAudio = false;
   bool subscribeAllVideo = false;
-  agora::rtc::REMOTE_VIDEO_STREAM_TYPE type;
-  bool encodedFrameOnly;
+  agora::rtc::REMOTE_VIDEO_STREAM_TYPE type = agora::rtc::REMOTE_VIDEO_STREAM_HIGH;
+  bool encodedFrameOnly = false;
   agora::CHANNEL_PROFILE_TYPE channelProfile = agora::CHANNEL_PROFILE_LIVE_BROADCASTING;
   agora::rtc::RECV_TYPE recv_type = agora::rtc::RECV_MEDIA_ONLY;
 };
+
+static const int DefaultConnectWaitTime = 3000;
 
 class ConnectionWrapper : public agora::rtc::IRtcConnectionObserver {
  public:
@@ -35,11 +37,9 @@ class ConnectionWrapper : public agora::rtc::IRtcConnectionObserver {
                     const ConnectionConfig& config);
   virtual ~ConnectionWrapper();
 
-  bool Connect(const char* appid, const char* channelId, agora::user_id_t userId);
-  bool WaitForConnected(int wait_ms);
-  bool WaitForDisconnected(int wait_ms);
+  bool Connect(const char* appid, const char* channelId, agora::user_id_t userId, int waitMs = DefaultConnectWaitTime);
+  bool Disconnect(int waitMs = DefaultConnectWaitTime);
   std::shared_ptr<LocalUserWrapper> GetLocalUser();
-  bool Disconnect();
 
  public:
   // inherit from agora::rtc::IRtcConnectionObserver

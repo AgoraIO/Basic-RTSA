@@ -13,8 +13,8 @@ std::shared_ptr<ConnectionWrapper> ConnectionWrapper::CreateConnection(
     agora::base::IAgoraService* service, const ConnectionConfig& config) {
   agora::rtc::RtcConnectionConfiguration ccfg;
   // Set port range
-  ccfg.minPort = 4500;
-  ccfg.maxPort = 5500;
+  ccfg.minPort = config.minPort;
+  ccfg.maxPort = config.maxPort;
 
   agora::rtc::AudioSubscriptionOptions audioSubOpt;
   if (!config.play) {
@@ -57,29 +57,25 @@ ConnectionWrapper::ConnectionWrapper(agora::agora_refptr<agora::rtc::IRtcConnect
 
 ConnectionWrapper::~ConnectionWrapper() { connection_->unregisterObserver(this); }
 
-bool ConnectionWrapper::Connect(const char* appid, const char* channelId, agora::user_id_t userId) {
-  return (agora::ERR_OK == connection_->connect(appid, channelId, userId));
-}
-
-bool ConnectionWrapper::Disconnect() { return (agora::ERR_OK == connection_->disconnect()); }
-
-bool ConnectionWrapper::WaitForConnected(int wait_ms) {
-  connect_ready_.Wait(wait_ms);
-  if (connection_->getConnectionInfo().state == agora::rtc::CONNECTION_STATE_CONNECTED) {
-    connected_ = true;
-  } else {
-    connected_ = false;
+bool ConnectionWrapper::Connect(const char* appid, const char* channelId, agora::user_id_t userId, int waitMs) {
+  if (agora::ERR_OK == connection_->connect(appid, channelId, userId)) {
+    connect_ready_.Wait(waitMs);
+    if (connection_->getConnectionInfo().state == agora::rtc::CONNECTION_STATE_CONNECTED) {
+      connected_ = true;
+    } else {
+      connected_ = false;
+    }
   }
-
   return connected_;
 }
 
-bool ConnectionWrapper::WaitForDisconnected(int wait_ms) {
-  disconnect_ready_.Wait(wait_ms);
-  if (connection_->getConnectionInfo().state != agora::rtc::CONNECTION_STATE_CONNECTED) {
-    connected_ = false;
+bool ConnectionWrapper::Disconnect(int waitMs) {
+  if (agora::ERR_OK == connection_->disconnect()){
+    disconnect_ready_.Wait(waitMs);
+    if (connection_->getConnectionInfo().state != agora::rtc::CONNECTION_STATE_CONNECTED) {
+      connected_ = false;
+    }
   }
-
   return !connected_;
 }
 

@@ -28,7 +28,6 @@ MediaDataSender::MediaDataSender(agora::base::IAgoraService* service)
 
 MediaDataSender::~MediaDataSender() {
   connection_->Disconnect();
-  connection_->WaitForDisconnected(3000);
 }
 
 void MediaDataSender::setVerbose(bool verbose) { verbose_ = verbose; }
@@ -37,11 +36,9 @@ bool MediaDataSender::connect(const char* channelId, agora::user_id_t userId) {
   ConnectionConfig config;
   config.clientRoleType = agora::rtc::CLIENT_ROLE_BROADCASTER;
   config.channelProfile = agora::CHANNEL_PROFILE_LIVE_BROADCASTING;
-  config.clientRoleType = agora::rtc::CLIENT_ROLE_BROADCASTER;
 
   connection_ = ConnectionWrapper::CreateConnection(service_, config);
-  connection_->Connect(API_CALL_APPID, channelId, userId);
-  if (!connection_->WaitForConnected(3000)) {
+  if (!connection_->Connect(API_CALL_APPID, channelId, userId)) {
     return false;
   }
   return true;

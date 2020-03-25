@@ -92,9 +92,7 @@ std::shared_ptr<ConnectionWrapper> createRecvConnection(agora::base::IAgoraServi
   char buf[16] = {0};
   snprintf(buf, sizeof(buf), "%d", recv_config.uid);
 
-  connection_->Connect(API_CALL_APPID, channelId, buf);
-
-  if (!connection_->WaitForConnected(3000)) {
+  if (!connection_->Connect(API_CALL_APPID, channelId, buf)) {
     printf("Connect to channel %s failed, tid %ld\n", channelId, gettid());
     return nullptr;
   }

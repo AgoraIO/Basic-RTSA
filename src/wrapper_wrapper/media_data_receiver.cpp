@@ -34,7 +34,6 @@ MediaDataReceiver::MediaDataReceiver(agora::base::IAgoraService* service, const 
 
 MediaDataReceiver::~MediaDataReceiver() {
   connection_->Disconnect();
-  connection_->WaitForDisconnected(3000);
 }
 
 void MediaDataReceiver::setVerbose(bool verbose) { verbose_ = verbose; }
