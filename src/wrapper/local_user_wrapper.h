@@ -46,7 +46,7 @@ class LocalUserWrapper : public agora::rtc::ILocalUserObserver {
                                      agora::rtc::LOCAL_AUDIO_STREAM_ERROR errorCode) override {}
 
   void onVideoTrackPublishSuccess(
-      agora::agora_refptr<agora::rtc::ILocalVideoTrack> videoTrack) override {}
+      agora::agora_refptr<agora::rtc::ILocalVideoTrack> videoTrack, int elapsed) override {}
 
   void onVideoTrackPublicationFailure(agora::agora_refptr<agora::rtc::ILocalVideoTrack> videoTrack,
                                       agora::ERROR_CODE_TYPE error) override {}
@@ -58,7 +58,7 @@ class LocalUserWrapper : public agora::rtc::ILocalUserObserver {
   void onUserVideoTrackStateChanged(agora::user_id_t userId,
                                     agora::agora_refptr<agora::rtc::IRemoteVideoTrack> videoTrack,
                                     agora::rtc::REMOTE_VIDEO_STREAM_STATE state,
-                                    agora::rtc::REMOTE_VIDEO_STATE_REASON reason) override {}
+                                    agora::rtc::REMOTE_VIDEO_STATE_REASON reason, int elapsed) override {}
 
   void onRemoteVideoTrackStatistics(agora::agora_refptr<agora::rtc::IRemoteVideoTrack> videoTrack,
                                     const agora::rtc::RemoteVideoTrackStats& stats) override {}
