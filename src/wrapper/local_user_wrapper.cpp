@@ -24,26 +24,24 @@ void LocalUserWrapper::PublishVideoTrack(
   local_user_->publishVideo(videoTrack);
 }
 
-agora::agora_refptr<agora::rtc::IRemoteAudioTrack> LocalUserWrapper::GetRemoteAudioTrack(
-    int wait_ms) {
-  remote_audio_track_ready_.Wait(wait_ms);
-  return remote_audio_track_;
-}
-agora::agora_refptr<agora::rtc::IRemoteVideoTrack> LocalUserWrapper::GetRemoteVideoTrack(
-    int wait_ms) {
-  remote_video_track_ready_.Wait(wait_ms);
-  return remote_video_track_;
-}
-
 void LocalUserWrapper::onUserAudioTrackSubscribed(
     agora::user_id_t userId, agora::agora_refptr<agora::rtc::IRemoteAudioTrack> audioTrack) {
+  std::lock_guard<std::mutex> _(observer_lock_);
   remote_audio_track_ = audioTrack;
-  remote_video_track_ready_.Set();
+  if (remote_audio_track_ && media_packet_receiver_) {
+    remote_audio_track_->registerMediaPacketReceiver(media_packet_receiver_);
+  }
 }
 
 void LocalUserWrapper::onUserVideoTrackSubscribed(
     agora::user_id_t userId, agora::rtc::VideoTrackInfo trackInfo,
     agora::agora_refptr<agora::rtc::IRemoteVideoTrack> videoTrack) {
+  std::lock_guard<std::mutex> _(observer_lock_);
   remote_video_track_ = videoTrack;
-  remote_video_track_ready_.Set();
+  if (remote_video_track_ && video_encoded_receiver_) {
+    remote_video_track_->registerVideoEncodedImageReceiver(video_encoded_receiver_);
+  }
+  if (remote_video_track_ && media_packet_receiver_) {
+    remote_video_track_->registerMediaPacketReceiver(media_packet_receiver_);
+  }
 }

@@ -5,6 +5,7 @@
 //
 
 #include <thread>
+#include <functional>
 
 #include "gtest/gtest.h"
 
@@ -58,7 +59,8 @@ TEST_F(VideoTest, h264_send_and_receive_encoded_frame) {
   std::unique_ptr<VideoEncodedFrameReceiver> receiver(new VideoEncodedFrameReceiver);
 
   // Recv connection create and register receiver to received encoded video frame.
-  auto remote_video_track = conn_recv->GetLocalUser()->GetRemoteVideoTrack(3000);
+  std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+  auto remote_video_track = conn_recv->GetLocalUser()->GetRemoteVideoTrack();
   ASSERT_TRUE(remote_video_track);
   remote_video_track->registerVideoEncodedImageReceiver(receiver.get());
 
@@ -113,7 +115,8 @@ TEST_F(VideoTest, video_packet_send_and_receive) {
   std::unique_ptr<MediaPacketReceiver> receiver(new MediaPacketReceiver);
 
   // Recv connection create and register receiver to received encoded video frame.
-  auto remote_video_track = conn_recv->GetLocalUser()->GetRemoteVideoTrack(3000);
+  std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+  auto remote_video_track = conn_recv->GetLocalUser()->GetRemoteVideoTrack();
   ASSERT_TRUE(remote_video_track);
   remote_video_track->registerMediaPacketReceiver(receiver.get());
   conn_recv->GetLocalUser()->GetLocalUser()->registerMediaControlPacketReceiver(receiver.get());

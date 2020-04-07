@@ -92,7 +92,7 @@ void EncodedAudioFrameSender::sendAudioFrames() {
     }
   }
   if (verbose_) {
-    AGO_LOG("Send %d test aac frames end, %d bytes\n", sent_audio_frames_, bytesnum);
+    AGO_LOG("Send %ld test aac frames end, %d bytes\n", sent_audio_frames_, bytesnum);
   }
 
   std::this_thread::sleep_for(std::chrono::milliseconds(50));

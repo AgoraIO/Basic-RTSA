@@ -8,8 +8,9 @@
 
 #include <stdio.h>
 #include <thread>
+#include <cstring>
 
-#include "../../test_data/foreman_frames.h"
+#include "test_data/foreman_frames.h"
 #include "connection_wrapper.h"
 #include "local_user_wrapper.h"
 #include "utils.h"
@@ -56,12 +57,15 @@ void VideoVP8FrameSender::sendVideoFrames() {
   agora::rtc::VIDEO_FRAME_TYPE frame_type;
   agora::rtc::VIDEO_CODEC_TYPE codec;
 
+#define CONVERT_TO_INT(a, b, c, d) \
+    ((ENDIANNESS == 'l') ? (a | b << 8 | c << 16 | d << 24) : (a << 24 | b << 16 | c << 8 | d))
+
   fread(&header, sizeof(header), 1, f);
-  if (header.codec == '08PV') {
+  if (header.codec == CONVERT_TO_INT('V', 'P', '8', '0')) {
     codec = agora::rtc::VIDEO_CODEC_VP8;
-  } else if (header.codec == '09PV') {
+  } else if (header.codec == CONVERT_TO_INT('V', 'P', '9', '0')) {
     codec = agora::rtc::VIDEO_CODEC_VP9;
-  } else if (header.codec == '462H') {
+  } else if (header.codec == CONVERT_TO_INT('H', '2', '6', '4')) {
     codec = agora::rtc::VIDEO_CODEC_H264;
   } else {
     codec = agora::rtc::VIDEO_CODEC_VP8;

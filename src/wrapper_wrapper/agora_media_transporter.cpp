@@ -29,7 +29,7 @@ static int startUid = 0;
 static uint64_t duration = 200000;
 static int sendMedia = 2;
 static bool multiSlice = false;
-static bool fileSave = false;
+static int fileSaveOpt = -1;
 static std::string fileSaveNamePath = "user_pcm_audio_data.wav";
 static bool isRecv = false;
 static int recvType = 0;
@@ -40,7 +40,7 @@ static bool startRecorder = false;
 void parseArgs(int argc, char* argv[]) {
   char* ptr = nullptr;
   int ch = 0;
-  while ((ch = getopt(argc, argv, "a:v:j:d:hm:n:u:sr:pc:l")) != -1) {
+  while ((ch = getopt(argc, argv, "a:v:j:d:hm:n:u:s:r:pc:l")) != -1) {
     switch (ch) {
       case 'a':
         audioCodec = atoi(optarg);
@@ -66,9 +66,13 @@ void parseArgs(int argc, char* argv[]) {
       case 'u':
         startUid = atoi(optarg);
         break;
-      case 's':
-        fileSave = true;
-        break;
+      case 's': {
+        int opt = atoi(optarg);
+        if (opt < 0 || opt > 3)
+          printf("Illegal save option, the accpeted ones are 0/1/2/3 ...\n");
+        else
+          fileSaveOpt = opt;
+      } break;
       case 'r':
         isRecv = true;
         recvType = atoi(optarg);
@@ -92,19 +96,10 @@ void parseArgs(int argc, char* argv[]) {
 
 void createAndInitializeAgoraService(bool enableAudioDevice, bool enableAudioProcessor,
                                      bool enableVideo) {
-  sService =  createAndInitAgoraService(enableAudioDevice, enableAudioProcessor, enableVideo);
-}
-
-void avSendTest() {
-  std::shared_ptr<MediaDataSender> audioVideoSender = std::make_shared<MediaDataSender>(sService);
-  audioVideoSender->setVerbose(true);
-  bool connected = audioVideoSender->connect(connection_test_cname.c_str(), "1");
-  if (connected) {
-    printf("Start to send audio\n");
-    audioVideoSender->sendAudioAACFile("testdata/test.aac", false);
-    printf("Start to send video\n");
-    audioVideoSender->sendVideo();
-    printf("Send audio/video end\n");
+  sService = createAndInitAgoraService(enableAudioDevice, enableAudioProcessor, enableVideo);
+  if (!sService) {
+    printf("Fail to create or init service ...\n");
+    std::exit(1);
   }
 }
 
@@ -236,8 +231,10 @@ void startConcurrentObserverRecv() {
       config.audio_data_fetch_mode = AudioDataFetchPcmObserer;
       config.audio_data_observer_params.audio_data_fetch_type = static_cast<AudioDataFetchType>(AudioDataTypePlayback
           | AudioDataTypePlaybackBeforeMixing);
-      config.audio_data_observer_params.audio_data_observer_params[1].save_file = fileSave;
-      config.audio_data_observer_params.audio_data_observer_params[1].file_saved_path = fileSaveNamePath;
+      if (fileSaveOpt != -1) {
+        config.audio_data_observer_params.audio_data_observer_params[fileSaveOpt].save_file = true;
+        config.audio_data_observer_params.audio_data_observer_params[fileSaveOpt].file_saved_path = fileSaveNamePath;
+      }
     }
 
     auto mediaReceiver = std::make_shared<MediaDataReceiver>(sService, config);
@@ -251,6 +248,9 @@ void startConcurrentObserverRecv() {
 
   printf("receivers count %zu\n", receivers.size());
   std::this_thread::sleep_for(std::chrono::milliseconds(duration));
+  for (auto receiver = receivers.begin(); receiver != receivers.end(); ++receiver) {
+    (*receiver)->waitForCompleted();
+  }
 }
 
 void destroyAgoraService() {

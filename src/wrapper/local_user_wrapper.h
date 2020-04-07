@@ -20,8 +20,22 @@ class LocalUserWrapper : public agora::rtc::ILocalUserObserver {
   agora::rtc::ILocalUser* GetLocalUser();
   void PublishAudioTrack(agora::agora_refptr<agora::rtc::ILocalAudioTrack> audioTrack);
   void PublishVideoTrack(agora::agora_refptr<agora::rtc::ILocalVideoTrack> audioTrack);
-  agora::agora_refptr<agora::rtc::IRemoteAudioTrack> GetRemoteAudioTrack(int wait_ms);
-  agora::agora_refptr<agora::rtc::IRemoteVideoTrack> GetRemoteVideoTrack(int wait_ms);
+  agora::agora_refptr<agora::rtc::IRemoteAudioTrack> GetRemoteAudioTrack() { return remote_audio_track_; }
+  agora::agora_refptr<agora::rtc::IRemoteVideoTrack> GetRemoteVideoTrack() { return remote_video_track_; }
+
+  void setMediaPacketReceiver(agora::rtc::IMediaPacketReceiver* receiver) {
+    std::lock_guard<std::mutex> _(observer_lock_);
+    media_packet_receiver_ = receiver;
+    if (remote_audio_track_)
+      remote_audio_track_->registerMediaPacketReceiver(media_packet_receiver_);
+
+    if (remote_video_track_)
+      remote_video_track_->registerMediaPacketReceiver(media_packet_receiver_);
+  }
+
+  void setVideoEncodedImageReceiver(agora::rtc::IVideoEncodedImageReceiver* receiver) {
+    video_encoded_receiver_ = receiver;
+  }
 
  public:
   // inherit from agora::rtc::ILocalUserObserver
@@ -81,9 +95,11 @@ class LocalUserWrapper : public agora::rtc::ILocalUserObserver {
  private:
   agora::rtc::ILocalUser* local_user_{nullptr};
 
-  AutoResetEvent remote_audio_track_ready_;
-  AutoResetEvent remote_video_track_ready_;
-
   agora::agora_refptr<agora::rtc::IRemoteAudioTrack> remote_audio_track_;
   agora::agora_refptr<agora::rtc::IRemoteVideoTrack> remote_video_track_;
+
+  agora::rtc::IMediaPacketReceiver* media_packet_receiver_{nullptr};
+  agora::rtc::IVideoEncodedImageReceiver* video_encoded_receiver_{nullptr};
+
+  std::mutex observer_lock_;
 };

@@ -12,16 +12,15 @@
 
 #include "IAgoraMediaEngine.h"
 
-#include "utils/wav_header.h"
-
 class AudioPCMFrameHandler;
+class AudioFrameHandlerFactory;
 
 class AudioFrameObserver : public agora::media::IAudioFrameObserver {
  public:
   AudioFrameObserver(std::unique_ptr<AudioPCMFrameHandler> playbackDataHandler,
                      std::unique_ptr<AudioPCMFrameHandler> recordingDataHandler,
                      std::unique_ptr<AudioPCMFrameHandler> mixedDataHandler,
-                     std::unique_ptr<AudioPCMFrameHandler> userDataHandler);
+                     std::unique_ptr<AudioFrameHandlerFactory> userDataHandlerFactory);
 
   virtual ~AudioFrameObserver();
 
@@ -40,7 +39,7 @@ class AudioFrameObserver : public agora::media::IAudioFrameObserver {
   std::unique_ptr<AudioPCMFrameHandler> playbackDataHandler_;
   std::unique_ptr<AudioPCMFrameHandler> recordingDataHandler_;
   std::unique_ptr<AudioPCMFrameHandler> mixedDataHandler_;
-  std::unique_ptr<AudioPCMFrameHandler> userDataHandler_;
-  std::map<unsigned int, std::shared_ptr<AudioPCMFrameHandler>> pcm_data_handlers_;
+  std::unique_ptr<AudioFrameHandlerFactory> userDataHandlerFactory_;
+  std::map<unsigned int, std::unique_ptr<AudioPCMFrameHandler>> pcm_data_handlers_;
   int recvSamples;
 };

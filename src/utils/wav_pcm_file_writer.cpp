@@ -62,4 +62,6 @@ void WavPcmFileWriter::closeWriter() {
     printf("Error rewriting WAV header: %s\n", std::strerror(errno));
   }
   fclose(wav_file_);
+  printf("Dumped PCM file is saved as: %s [channel count: %lu, sample rate: %u] ...\n",
+         output_file_path_.c_str(), number_of_channels_, sample_rate_hz_);
 }

@@ -48,26 +48,22 @@ void MediaDataReceiver::setupPuller() {
 
 void MediaDataReceiver::setMediaPacketReceiver() {
   media_packet_receiver_.reset(new MediaPacketReceiver);
+  media_packet_receiver_->SetVerbose(true); // enable the log.
   connection_->GetLocalUser()->GetLocalUser()->registerMediaControlPacketReceiver(
       media_packet_receiver_.get());
 
-  auto remoteAudioTrack = connection_->GetLocalUser()->GetRemoteAudioTrack(0);
-  remoteAudioTrack->registerMediaPacketReceiver(media_packet_receiver_.get());
-
-  auto remoteVideoTrack = connection_->GetLocalUser()->GetRemoteVideoTrack(0);
-  remoteVideoTrack->registerMediaPacketReceiver(media_packet_receiver_.get());
+  connection_->GetLocalUser()->setMediaPacketReceiver(media_packet_receiver_.get());
 }
 
 void MediaDataReceiver::setupVideoReceiving() {
-  auto remoteVideoTrack = connection_->GetLocalUser()->GetRemoteVideoTrack(0);
   encodedFrameReceiver_.reset(new VideoEncodedFrameReceiver);
-  remoteVideoTrack->registerVideoEncodedImageReceiver(encodedFrameReceiver_.get());
+  connection_->GetLocalUser()->setVideoEncodedImageReceiver(encodedFrameReceiver_.get());
 }
 
 bool MediaDataReceiver::connect(const char* channelId) {
-  connection_ = createRecvConnection(service_, channelId, config_);
+  connection_ = createRecvConnection(service_, config_, channelId);
 
-  auto remoteAudioTrack = connection_->GetLocalUser()->GetRemoteAudioTrack(0);
+  if (!connection_) return false;
 
   if (config_.audio_recv_mode == AudioRecvAudioDataOnly
       && config_.audio_data_fetch_mode == AudioDataFetchPcmPull) {
@@ -78,7 +74,6 @@ bool MediaDataReceiver::connect(const char* channelId) {
   } else if (config_.audio_data_fetch_mode == AudioDataFetchMediaPacket) {
     setMediaPacketReceiver();
   }
-
   setupVideoReceiving();
 
   return true;
@@ -96,10 +91,12 @@ void MediaDataReceiver::waitForCompleted() {
     connection_->GetLocalUser()->GetLocalUser()->unregisterMediaControlPacketReceiver(
         media_packet_receiver_.get());
 
-    auto remoteAudioTrack = connection_->GetLocalUser()->GetRemoteAudioTrack(0);
-    remoteAudioTrack->unregisterMediaPacketReceiver(media_packet_receiver_.get());
+    auto remoteAudioTrack = connection_->GetLocalUser()->GetRemoteAudioTrack();
+    if (remoteAudioTrack)
+      remoteAudioTrack->unregisterMediaPacketReceiver(media_packet_receiver_.get());
 
-    auto remoteVideoTrack = connection_->GetLocalUser()->GetRemoteVideoTrack(0);
-    remoteVideoTrack->unregisterMediaPacketReceiver(media_packet_receiver_.get());
+    auto remoteVideoTrack = connection_->GetLocalUser()->GetRemoteVideoTrack();
+    if (remoteVideoTrack)
+      remoteVideoTrack->unregisterMediaPacketReceiver(media_packet_receiver_.get());
   }
 }

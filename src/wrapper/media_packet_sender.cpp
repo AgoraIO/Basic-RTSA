@@ -9,13 +9,14 @@
 #include <stdint.h>
 #include <chrono>
 #include <thread>
+#include <cstring>
 
 #include "connection_wrapper.h"
 #include "local_user_wrapper.h"
 #include "utils.h"
 
-MediaPacketSender::MediaPacketSender(const SendConfig& config)
-    : config_(config), control_packet_sender_(nullptr) {}
+MediaPacketSender::MediaPacketSender(const SendConfig& config, int uid)
+    : config_(config), control_packet_sender_(nullptr), userId_(uid) {}
 
 MediaPacketSender::~MediaPacketSender() = default;
 
@@ -35,10 +36,9 @@ bool MediaPacketSender::initialize(agora::base::IAgoraService* service,
     auto videoTrack_ = service->createCustomVideoTrack(media_packet_sender_);
     videoTrack_->setEnabled(true);
     connection->GetLocalUser()->PublishVideoTrack(videoTrack_);
-
-    control_packet_sender_ =
-        connection->GetLocalUser()->GetLocalUser()->getMediaControlPacketSender();
   }
+  control_packet_sender_ =
+      connection->GetLocalUser()->GetLocalUser()->getMediaControlPacketSender();
   return true;
 }
 

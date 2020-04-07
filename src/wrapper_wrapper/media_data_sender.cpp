@@ -19,8 +19,8 @@
 #include "wrapper/utils.h"
 #include "wrapper/video_frame_sender.h"
 
-MediaDataSender::MediaDataSender(agora::base::IAgoraService* service)
-    : service_(service), pid_(0), tid_(0), statisticPacketNum_(0) {
+MediaDataSender::MediaDataSender(agora::base::IAgoraService* service, int uid)
+    : uid_(uid), statisticPacketNum_(0), service_(service) {
   pid_ = getpid();
   tid_ = gettid();
   factory_ = service_->createMediaNodeFactory();
@@ -77,9 +77,13 @@ void MediaDataSender::sendAudioPcmFile(const char* filepath) {
 
 void MediaDataSender::sendAudioMediaPacket() {
   printf("Start to send audio media packet ...\n");
-  SendConfig args = {500000, 350, 7, true};
+  SendConfig args;
+  args.testDataLength = 500000;
+  args.lengthPerSend = 350;
+  args.sendIntervalMs = 7;
+  args.audioTest = true;
 
-  std::unique_ptr<MediaPacketSender> packet_sender(new MediaPacketSender(args));
+  std::unique_ptr<MediaPacketSender> packet_sender(new MediaPacketSender(args, uid_));
   packet_sender->initialize(service_, factory_, connection_);
   packet_sender->sendPackets();
 }
@@ -109,8 +113,12 @@ void MediaDataSender::sendVideo() {
 }
 
 void MediaDataSender::sendVideoMediaPacket() {
-  SendConfig args = {1500000, 1250, 7, false};
-  std::unique_ptr<MediaPacketSender> packet_sender(new MediaPacketSender(args));
+  SendConfig args;
+  args.testDataLength = 1500000;
+  args.lengthPerSend = 1250;
+  args.sendIntervalMs = 7;
+  args.audioTest = false;
+  std::unique_ptr<MediaPacketSender> packet_sender(new MediaPacketSender(args, uid_));
   packet_sender->initialize(service_, factory_, connection_);
   packet_sender->sendPackets();
 }

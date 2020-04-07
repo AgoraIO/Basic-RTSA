@@ -5,6 +5,7 @@
 //
 
 #include <thread>
+#include <functional>
 
 #include "gtest/gtest.h"
 
@@ -59,7 +60,8 @@ TEST_F(AudioTest, audio_packet_send_and_receive) {
   // Recv connection create and register receiver to received audio packets.
   auto media_packet_receiver = std::make_shared<MediaPacketReceiver>();
 
-  auto remote_audio_track = conn_recv->GetLocalUser()->GetRemoteAudioTrack(3000);
+  std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+  auto remote_audio_track = conn_recv->GetLocalUser()->GetRemoteAudioTrack();
   ASSERT_TRUE(remote_audio_track);
   remote_audio_track->registerMediaPacketReceiver(media_packet_receiver.get());
 

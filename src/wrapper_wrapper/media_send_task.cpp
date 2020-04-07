@@ -37,7 +37,7 @@ void MediaSendTask::setVideoCodecType(agora::rtc::VIDEO_CODEC_TYPE videoCodec, b
 void MediaSendTask::Run() {
   printf("To connect channel %s in thread %s, pid %d, tid %ld\n", threadName_.c_str(),
          threadName_.c_str(), getpid(), gettid());
-  std::shared_ptr<MediaDataSender> audioVideoSender = std::make_shared<MediaDataSender>(service_);
+  std::shared_ptr<MediaDataSender> audioVideoSender = std::make_shared<MediaDataSender>(service_, uid_);
   char buf[16] = {0};
   snprintf(buf, sizeof(buf), "%d", uid_);
   bool connected = audioVideoSender->connect(threadName_.c_str(), buf);
@@ -52,17 +52,17 @@ void MediaSendTask::Run() {
         else {
           switch (audioCodec_) {
             case agora::rtc::AUDIO_CODEC_AACLC:
-              audioVideoSender->sendAudioAACFile("build/linux/x64/test_data/aac.aac", false);
+              audioVideoSender->sendAudioAACFile("test_data/aac.aac", false);
               break;
             case agora::rtc::AUDIO_CODEC_HEAAC:
-              audioVideoSender->sendAudioAACFile("build/linux/x64/test_data/he_aac.aac", true);
+              audioVideoSender->sendAudioAACFile("test_data/he_aac.aac", true);
               break;
             case agora::rtc::AUDIO_CODEC_PCMU:
-              audioVideoSender->sendAudioPcmFile("build/linux/x64/test_data/test.wav");
+              audioVideoSender->sendAudioPcmFile("test_data/test.wav");
               break;
             case agora::rtc::AUDIO_CODEC_OPUS:
               audioVideoSender->sendAudioOpusFile(
-                  "build/linux/x64/test_data/ehren-paper_lights-96.opus");
+                  "test_data/ehren-paper_lights-96.opus");
               break;
             default:
               break;
@@ -77,12 +77,12 @@ void MediaSendTask::Run() {
         else {
           switch (videoCodec_) {
             case agora::rtc::VIDEO_CODEC_VP8:
-              audioVideoSender->sendVideoVp8File("build/linux/x64/test_data/test.vp8.ivf");
+              audioVideoSender->sendVideoVp8File("test_data/test.vp8.ivf");
               break;
             case agora::rtc::VIDEO_CODEC_H264:
               if (multiSlice_) {
                 audioVideoSender->sendVideoH264File(
-                    "build/linux/x64/test_data/test_multi_slice.h264");
+                    "test_data/test_multi_slice.h264");
               } else {
                 audioVideoSender->sendVideo();
               }

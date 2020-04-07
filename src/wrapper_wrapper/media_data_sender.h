@@ -19,7 +19,7 @@ class ConnectionWrapper;
 class MediaDataSender {
  public:
  public:
-  explicit MediaDataSender(agora::base::IAgoraService* service);
+  explicit MediaDataSender(agora::base::IAgoraService* service, int uid = 0);
   virtual ~MediaDataSender();
 
   void setVerbose(bool verbose);
@@ -41,6 +41,7 @@ class MediaDataSender {
   void sendEncodedAudioFile(const char* filepath, AUDIO_FILE_TYPE filetype);
 
  protected:
+  int uid_;
   pid_t pid_;
   int64_t tid_;
   int statisticPacketNum_;

@@ -5,7 +5,7 @@
 //
 #include "ogg_opus_file_parser.h"
 
-#include <opus/opusfile.h>
+#include <opusfile.h>
 
 int op_decode_cb(void* ctx, OpusMSDecoder* decoder, void* pcm, const ogg_packet* op, int nsamples,
                  int nchannels, int format, int li) {

@@ -24,7 +24,7 @@ struct SendConfig {
 
 class MediaPacketSender {
  public:
-  MediaPacketSender(const SendConfig& config);
+  MediaPacketSender(const SendConfig& config, int uid = 0);
   virtual ~MediaPacketSender();
 
   bool initialize(agora::base::IAgoraService* service,

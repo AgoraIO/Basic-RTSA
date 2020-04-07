@@ -31,7 +31,7 @@ bool VideoEncodedFrameReceiver::OnEncodedVideoImageReceived(
   received_encoded_video_frames_++;
 
   if (verbose_) {
-    printf("OnEncodedVideoImageReceived %d, frame length %d, total length %d\n",
+    printf("OnEncodedVideoImageReceived %d, frame length %lu, total length %d\n",
         received_encoded_video_frames_,
         length,
         received_total_bytes_);

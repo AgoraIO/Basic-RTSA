@@ -6,6 +6,7 @@
 #pragma once
 #include <chrono>
 #include <vector>
+#include <string>
 
 #include "api2/IAgoraService.h"
 
@@ -21,6 +22,9 @@
 #endif
 
 #define AGO_LOG printf
+
+static union { char c[4]; unsigned long mylong; } endian_test = { { 'l', '?', '?', 'b' } };
+#define ENDIANNESS ((char)endian_test.mylong)
 
 void dumpByteArray(const char* byteArray, int size);
 
@@ -90,8 +94,8 @@ struct MediaDataRecvConfig {
   int maxPort = 0;
 };
 
-std::shared_ptr<ConnectionWrapper> createRecvConnection(agora::base::IAgoraService* service,
-    const char* channelId, MediaDataRecvConfig &recv_config);
+std::shared_ptr<ConnectionWrapper> createRecvConnection(
+    agora::base::IAgoraService* service, MediaDataRecvConfig &recv_config, const char* channelId);
 
 std::string genPullFileName(int32_t uid);
 

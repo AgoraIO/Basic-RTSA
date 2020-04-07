@@ -15,8 +15,6 @@ void parseArgs(int argc, char* argv[]);
 void createAndInitializeAgoraService(bool enableAudioDevice = false,
                                      bool enableAudioProcessor = true, bool enableVideo = true);
 
-void avSendTest();
-
 void startConcurrentSend();
 
 void startConcurrentPullRecv();
