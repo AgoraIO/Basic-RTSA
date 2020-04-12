@@ -1,9 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 project(AgoraSDKDemo)
 
-# Config of Test
-add_subdirectory(src/test)
-
 # ogg begin
 # Download and unpack googletest at configure time
 configure_file(ImportOgg.cmake ogg-download/CMakeLists.txt)
