@@ -29,7 +29,7 @@ FixedFrameLengthAudioFileParser::~FixedFrameLengthAudioFileParser() {
 }
 
 bool FixedFrameLengthAudioFileParser::open() {
-  fileHandle_ = fopen(filePath_, "r");
+  fileHandle_ = fopen(filePath_, "rb");
   return fileHandle_ != nullptr;
 }
 
