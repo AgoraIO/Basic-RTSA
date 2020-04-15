@@ -153,8 +153,8 @@ add_library(AgoraSDKWrapper
         ${LOCAL_WRAPPER_CPP_FILES}
 )
 
-# Config of AgoraSDKDemoApp
-FILE(GLOB_RECURSE LOCAL_DEMOAPP_CPP_FILES "${CMAKE_SOURCE_DIR}/src/demo_main/*.cpp"
+# Config of AgoraSdkDemoApp
+FILE(GLOB_RECURSE LOCAL_DEMOAPP_CPP_FILES "${CMAKE_SOURCE_DIR}/src/demo_main/main.cpp"
         "${CMAKE_SOURCE_DIR}/src/wrapper_wrapper/*"
 )
 
@@ -167,8 +167,25 @@ link_libraries(
         AgoraSDKWrapper
 )
 
-add_executable(AgoraSDKDemoApp
+add_executable(AgoraSdkDemoApp
         ${LOCAL_DEMOAPP_CPP_FILES}
+)
+
+# Config of AgoraServerSdkDemoApp
+FILE(GLOB_RECURSE LOCAL_SERVER_DEMOAPP_CPP_FILES "${CMAKE_SOURCE_DIR}/src/demo_main/server_sdk_demo.cpp"
+        "${CMAKE_SOURCE_DIR}/src/wrapper_wrapper/*"
+)
+
+include_directories(
+        ${CMAKE_SOURCE_DIR}/src/include
+        /usr/local/include
+)
+
+link_libraries(
+        AgoraSDKWrapper
+)
+add_executable(AgoraServerSdkDemoApp
+        ${LOCAL_SERVER_DEMOAPP_CPP_FILES}
 )
 
 SET(EXECUTABLE_OUTPUT_PATH bin/${COMPILE_PLAT})
