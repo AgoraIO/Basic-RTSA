@@ -87,7 +87,7 @@ class LocalUserWrapper : public agora::rtc::ILocalUserObserver {
   void onAudioVolumeIndication(const agora::rtc::AudioVolumeInfo* speakers,
                                unsigned int speakerNumber, int totalVolume) override {}
 
-  void onLocalAudioTrackStatistics(const agora::rtc::LocalAudioTrackStats& stats) override {}
+  void onLocalAudioTrackStatistics(const agora::rtc::LocalAudioStats& stats) override {}
 
   void onRemoteAudioTrackStatistics(agora::agora_refptr<agora::rtc::IRemoteAudioTrack> audioTrack,
                                     const agora::rtc::RemoteAudioTrackStats& stats) override {}

@@ -26,7 +26,7 @@ AACFileParser::AACFileParser(const char* filepath)
       sampleRateHz_(48000),
       readsize_(0),
       firstGet_(true),
-      firstBuffer_(0),
+      firstBuffer_(nullptr),
       firstBufferLength_(0) {}
 
 AACFileParser::~AACFileParser() {

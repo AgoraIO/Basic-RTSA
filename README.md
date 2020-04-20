@@ -25,7 +25,7 @@ $ cmake ..
 $ make
 ```
 
-正常结束即可完成编译，产生 **AgoraSDKDemo** 可执行文件。
+正常结束即可完成编译，产生 **AgoraSdkDemoApp** 可执行文件。
 
 ## SDK Demo运行
 

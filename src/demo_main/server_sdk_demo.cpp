@@ -15,8 +15,6 @@
 #include "utils/opt_parser.h"
 #include "utils/log.h"
 
-using namespace std::literals::chrono_literals;
-
 #define DEFAULT_SAMPLE_RATE       (48000)
 #define DEFAULT_NUM_OF_CHANNELS   (1)
 #define DEFAULT_TARGET_BITRATE    (1*1000*1000)
@@ -253,7 +251,7 @@ int main(int argc, char* argv[]) {
     if (i++ % 10 == 0) {
       SampleSendVideoFrame(options, videoFrameSender);
     }
-    std::this_thread::sleep_for(10ms);
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
   }
 
   // Disconnect from Agora channel
