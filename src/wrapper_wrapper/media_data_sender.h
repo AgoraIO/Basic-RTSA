@@ -8,8 +8,8 @@
 #include <unistd.h>
 
 #include "AgoraBase.h"
-#include "api2/IAgoraService.h"
-#include "api2/NGIAgoraRtcConnection.h"
+#include "IAgoraService.h"
+#include "NGIAgoraRtcConnection.h"
 
 #include "utils/file_parser/audio_file_parser_factory.h"
 
@@ -35,6 +35,7 @@ class MediaDataSender {
   void sendVideoVp8File(const char* filepath);
   void sendVideoH264File(const char* filepath);
   void sendVideoMediaPacket();
+  void sendDataStream(int dataStreamType);
 
  private:
   agora::agora_refptr<agora::rtc::IAudioEncodedFrameSender> createAudioEncodedFrameSender();

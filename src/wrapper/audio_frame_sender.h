@@ -8,8 +8,8 @@
 
 #include <string>
 
-#include "api2/IAgoraService.h"
-#include "api2/NGIAgoraMediaNodeFactory.h"
+#include "IAgoraService.h"
+#include "NGIAgoraMediaNodeFactory.h"
 #include "utils/file_parser/audio_file_parser_factory.h"
 
 class AudioFileParser;
@@ -67,7 +67,30 @@ class AudioPcmFrameSender : public AudioFrameSender {
  private:
   std::string file_path;
   std::unique_ptr<AudioFileParser> file_parser_;
-  agora::agora_refptr<agora::rtc::IAudioPcmDataSender> audio_pcm_frame_ender_;
+  agora::agora_refptr<agora::rtc::IAudioPcmDataSender> audio_pcm_frame_sender_;
   int64_t sent_audio_frames_{0};
   bool verbose_{false};
 };
+
+class AudioRawPcmFileSender : public AudioFrameSender {
+ public:
+  AudioRawPcmFileSender(const char* filepath, int numberOfChannels = 2, int sampleRateHz = 48000);
+
+  ~AudioRawPcmFileSender();
+
+  bool initialize(agora::base::IAgoraService* service,
+                  agora::agora_refptr<agora::rtc::IMediaNodeFactory> factory,
+                  std::shared_ptr<ConnectionWrapper> connection) override;
+
+  void sendAudioFrames() override;
+
+ private:
+  std::string file_path;
+  int channels_{2};
+  int sampleRateHz_{48000};
+  std::unique_ptr<AudioFileParser> file_parser_;
+  agora::agora_refptr<agora::rtc::IAudioPcmDataSender> audio_pcm_frame_sender_;
+  int64_t sent_audio_frames_{0};
+  bool verbose_{false};
+};
+

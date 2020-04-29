@@ -12,6 +12,7 @@
 #endif
 #include "aac_file_parser.h"
 #include "wav_pcm_file_parser.h"
+#include "fixed_frame_length_audio_file_parser.h"
 
 AudioFileParser::~AudioFileParser() {}
 
@@ -25,16 +26,19 @@ AudioFileParserFactory::AudioFileParserFactory() {}
 AudioFileParserFactory::~AudioFileParserFactory() {}
 
 std::unique_ptr<AudioFileParser> AudioFileParserFactory::createAudioFileParser(
-    const char* filepath, AUDIO_FILE_TYPE filetype) {
+    ParserConfig& config) {
   std::unique_ptr<AudioFileParser> parser;
-  if (filetype == AUDIO_FILE_TYPE::AUDIO_FILE_OPUS) {
-    parser = std::move(createOpusFileParser(filepath));
-  } else if (filetype == AUDIO_FILE_TYPE::AUDIO_FILE_AACLC) {
-    parser = std::move(createAACFileParser(filepath));
-  } else if (filetype == AUDIO_FILE_TYPE::AUDIO_FILE_HEAAC) {
-    parser = std::move(createHEAACFileParser(filepath));
-  } else if (filetype == AUDIO_FILE_TYPE::AUDIO_FILE_PCM) {
-    parser = std::move(createWavPcmFileParser(filepath));
+  if (config.fileType == AUDIO_FILE_TYPE::AUDIO_FILE_OPUS) {
+    parser = std::move(createOpusFileParser(config.filePath));
+  } else if (config.fileType == AUDIO_FILE_TYPE::AUDIO_FILE_AACLC) {
+    parser = std::move(createAACFileParser(config.filePath));
+  } else if (config.fileType == AUDIO_FILE_TYPE::AUDIO_FILE_HEAAC) {
+    parser = std::move(createHEAACFileParser(config.filePath));
+  } else if (config.fileType == AUDIO_FILE_TYPE::AUDIO_FILE_PCM) {
+    parser = std::move(createWavPcmFileParser(config.filePath));
+  } else if (config.fileType == AUDIO_FILE_TYPE::AUDIO_FILE_FIX_LENGTH_FRAME) {
+    parser = std::move(createFixFrameLengthFileParser(config.filePath, config.sampleRateHz,
+                config.numberOfChannels, config.audioCodec, config.frameLength));
   }
   return std::move(parser);
 }
@@ -63,5 +67,13 @@ std::unique_ptr<AudioFileParser> AudioFileParserFactory::createOpusFileParser(
 std::unique_ptr<AudioFileParser> AudioFileParserFactory::createWavPcmFileParser(
     const char* filepath) {
   std::unique_ptr<WavPcmFileParser> parser(new WavPcmFileParser(filepath));
+  return std::move(parser);
+}
+
+std::unique_ptr<AudioFileParser> AudioFileParserFactory::createFixFrameLengthFileParser(
+    const char* filepath, int sampleRateHz, int numberOfChannels,
+    agora::rtc::AUDIO_CODEC_TYPE codec, int frameLength) {
+  std::unique_ptr<FixedFrameLengthAudioFileParser> parser(new FixedFrameLengthAudioFileParser(
+      filepath, sampleRateHz, numberOfChannels, codec, frameLength));
   return std::move(parser);
 }

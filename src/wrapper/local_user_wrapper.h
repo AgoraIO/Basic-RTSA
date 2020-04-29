@@ -7,9 +7,9 @@
 #pragma once
 
 #include "AgoraBase.h"
-#include "api2/NGIAgoraLocalUser.h"
+#include "NGIAgoraLocalUser.h"
 
-#include "utils/auto_reset_event.h"
+#include <mutex>
 
 class LocalUserWrapper : public agora::rtc::ILocalUserObserver {
  public:

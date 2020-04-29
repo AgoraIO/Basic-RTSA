@@ -7,15 +7,16 @@
 #pragma once
 
 #include <stdio.h>
+#include "media_file_parser.h"
 
-class H264FileParser {
+class H264FileParser : public VideoFileParser {
  public:
   explicit H264FileParser(const char* filepath);
   virtual ~H264FileParser();
 
-  bool open();
-  bool hasNext();
-  void getNext(char* buffer, int* length);
+  bool open() override;
+  bool hasNext() override;
+  void getNext(char* buffer, int* length) override;
 
  private:
   void readData();

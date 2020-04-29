@@ -9,7 +9,7 @@
 #include <thread>
 
 #include "AgoraBase.h"
-#include "api2/NGIAgoraRtcConnection.h"
+#include "NGIAgoraRtcConnection.h"
 
 #include "wrapper/audio_pcm_puller.h"
 #include "wrapper/utils.h"

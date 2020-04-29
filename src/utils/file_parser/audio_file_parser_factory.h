@@ -9,19 +9,7 @@
 #include <memory>
 
 #include "AgoraBase.h"
-
-class AudioFileParser {
- public:
-  virtual ~AudioFileParser();
-  virtual bool open() = 0;
-  virtual bool hasNext() = 0;
-  virtual void getNext(char* buffer, int* length) = 0;
-  virtual agora::rtc::AUDIO_CODEC_TYPE getCodecType() = 0;
-  virtual int getSampleRateHz() = 0;
-  virtual int getNumberOfChannels() = 0;
-  virtual int getBitsPerSample() { return 0; }
-  virtual int reset() { return 0; }
-};
+#include "media_file_parser.h"
 
 enum class AUDIO_FILE_TYPE : uint8_t {
   AUDIO_FILE_AACLC = 1,
@@ -33,17 +21,29 @@ enum class AUDIO_FILE_TYPE : uint8_t {
 
 class AudioFileParserFactory {
  public:
+  struct ParserConfig {
+    AUDIO_FILE_TYPE fileType{AUDIO_FILE_TYPE::AUDIO_FILE_PCM};
+    const char* filePath{nullptr};
+    int sampleRateHz{48000};
+    int numberOfChannels{2};
+    agora::rtc::AUDIO_CODEC_TYPE audioCodec{agora::rtc::AUDIO_CODEC_PCMA};
+    int frameLength{0};
+  };
+
+ public:
   static AudioFileParserFactory& Instance();
   ~AudioFileParserFactory();
 
-  std::unique_ptr<AudioFileParser> createAudioFileParser(const char* filepath,
-                                                         AUDIO_FILE_TYPE filetype);
+  std::unique_ptr<AudioFileParser> createAudioFileParser(ParserConfig& config);
 
  private:
   std::unique_ptr<AudioFileParser> createAACFileParser(const char* filepath);
   std::unique_ptr<AudioFileParser> createHEAACFileParser(const char* filepath);
   std::unique_ptr<AudioFileParser> createOpusFileParser(const char* filepath);
   std::unique_ptr<AudioFileParser> createWavPcmFileParser(const char* filepath);
+  std::unique_ptr<AudioFileParser> createFixFrameLengthFileParser(
+      const char* filepath, int sampleRateHz, int numberOfChannels,
+      agora::rtc::AUDIO_CODEC_TYPE codec, int frameLength);
 
  private:
   AudioFileParserFactory();

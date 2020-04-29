@@ -7,12 +7,12 @@
 #pragma once
 #include <string>
 
-#include "api2/IAgoraService.h"
+#include "IAgoraService.h"
 
 class MediaSendTask {
  public:
   MediaSendTask(agora::base::IAgoraService* service, std::string threadName, int cycles,
-                bool sendAudio, bool sendVideo, bool sendMediaPacket, int uid);
+                bool sendAudio, bool sendVideo, bool sendMediaPacket, int sendDataStream, int uid);
   virtual ~MediaSendTask();
   virtual void Run();
   void setAudioCodecType(agora::rtc::AUDIO_CODEC_TYPE audioCodec);
@@ -25,6 +25,7 @@ class MediaSendTask {
   bool sendAudio_;
   bool sendVideo_;
   bool mediaPacket_;
+  int sendDataStream_;
   agora::rtc::AUDIO_CODEC_TYPE audioCodec_;
   agora::rtc::VIDEO_CODEC_TYPE videoCodec_;
   bool multiSlice_;

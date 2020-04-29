@@ -1,192 +1,166 @@
 cmake_minimum_required(VERSION 3.5)
 project(AgoraSDKDemo)
 
-# ogg begin
-# Download and unpack googletest at configure time
-configure_file(ImportOgg.cmake ogg-download/CMakeLists.txt)
+# Remove c++11 to avoid third_party libs build error
+separate_arguments(CMAKE_CXX_FLAGS)
+list(REMOVE_ITEM CMAKE_CXX_FLAGS "-std=c++11")
+
+foreach(item ${CMAKE_CXX_FLAGS})
+    set(TEMP "${TEMP} ${item}")
+endforeach(item)
+set(CMAKE_CXX_FLAGS ${TEMP})
+
+if("${MEM_CHECK}" STREQUAL "true")
+        set(sanitizer -fsanitize=address)
+endif()
+
+if("${TARGET}" STREQUAL "rtc")
+        set(CMAKE_CXX_FLAGS " ${CMAKE_CXX_FLAGS} -DRTC_TARGET ")
+endif()
+
+if("${TARGET_OS}" STREQUAL "linux")
+        set(lib_sdk "agora_rtc_sdk")
+        set(lib_thread "pthread")
+        if("${TARGET}" STREQUAL "rtc")
+                set(rtc_src "${CMAKE_SOURCE_DIR}/src/rtc/*")
+        endif()
+        set(AGORA_MEDIA_SDK_DIR ${CMAKE_SOURCE_DIR}/libs/agora_media_sdk)
+        set(AGORA_MEDIA_SDK_HEADER_DIR ${CMAKE_SOURCE_DIR}/libs/agora_media_sdk)
+        set(COMPILE_PLAT "x64")
+else()
+        if("${TARGET}" STREQUAL "rtsa")
+                set(lib_sdk "agora-rtsa-sdk")
+        else()
+                set(lib_sdk "agora-rtc-sdk-jni")
+        endif()
+        set(lib_thread "stdc++")
+        set(AGORA_MEDIA_SDK_DIR ${CMAKE_SOURCE_DIR}/../agora_rtsa_sdk/libs/${ANDROID_ABI})
+        set(AGORA_MEDIA_SDK_HEADER_DIR ${CMAKE_SOURCE_DIR}/../agora_rtsa_sdk/)
+        set(COMPILE_PLAT "${ANDROID_ABI}")
+endif()
+
+
+###    1. Prepare third-party libs    ###
+set(third_party_path "${CMAKE_BINARY_DIR}/../third_party/")
+
+macro(PREPARE_LIBS libA)
+configure_file(${third_party_path}/Import${ARGV0}.cmake
+        ${third_party_path}/${ARGV0}/${ARGV0}-download/CMakeLists.txt
+)
 execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
-        WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/ogg-download"
-        )
-execute_process(COMMAND "${CMAKE_COMMAND}" --build .
-        WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/ogg-download"
-        )
-
-# Add ogg directly to our build. This adds the following targets:
-add_subdirectory("${CMAKE_BINARY_DIR}/ogg-src"
-        "${CMAKE_BINARY_DIR}/ogg-build"
-        )
-
-# The ogg targets carry header search path dependencies
-# automatically when using CMake 2.8.11 or later. Otherwise we
-# have to add them here ourselves.
-include_directories("${libogg_SOURCE_DIR}/include")
-include_directories("${libogg_SOURCE_DIR}/../ogg-build/include")
-# ogg end
-
-# opus begin
-# Download and unpack opus at configure time
-configure_file(ImportOpus.cmake opus-download/CMakeLists.txt)
-execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
-        WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/opus-download"
-        )
-execute_process(COMMAND "${CMAKE_COMMAND}" --build .
-        WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/opus-download"
-        )
-
-# Add opus directly to our build. This adds the following targets:
-add_subdirectory("${CMAKE_BINARY_DIR}/opus-src"
-        "${CMAKE_BINARY_DIR}/opus-build"
-        )
-
-# The opus targets carry header search path dependencies
-# automatically when using CMake 2.8.11 or later. Otherwise we
-# have to add them here ourselves.
-include_directories("${Opus_SOURCE_DIR}/include")
-# opus end
-
-# opusfile begin
-# Download and unpack opusfile at configure time
-configure_file(ImportOpusfile.cmake opusfile-download/CMakeLists.txt)
-execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
-        WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/opusfile-download"
-        )
-execute_process(COMMAND "${CMAKE_COMMAND}" --build .
-        WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/opusfile-download"
-        )
-
-# Add opusfile directly to our build. This adds the following targets:
-add_subdirectory("${CMAKE_BINARY_DIR}/opusfile-src"
-        "${CMAKE_BINARY_DIR}/opusfile-build"
-        )
-
-# The opusfile targets carry header search path dependencies
-# automatically when using CMake 2.8.11 or later. Otherwise we
-# have to add them here ourselves.
-include_directories("${Opusfile_SOURCE_DIR}/include")
-# opusfile end
-
-# GoogleTest begin
-# Download and unpack googletest at configure time
-configure_file(ImportGtest.cmake googletest-download/CMakeLists.txt)
-execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
-        WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/googletest-download"
+        WORKING_DIRECTORY "${third_party_path}/${ARGV0}/${ARGV0}-download"
 )
 execute_process(COMMAND "${CMAKE_COMMAND}" --build .
-        WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/googletest-download"
+        WORKING_DIRECTORY "${third_party_path}/${ARGV0}/${ARGV0}-download"
 )
-
-# Prevent GoogleTest from overriding our compiler/linker options
-# when building with Visual Studio
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-
-# Add googletest directly to our build. This adds the following targets:
-# gtest, gtest_main, gmock and gmock_main
-add_subdirectory("${CMAKE_BINARY_DIR}/googletest-src"
-        "${CMAKE_BINARY_DIR}/googletest-build"
+add_subdirectory("${third_party_path}/${ARGV0}/${ARGV0}-src"
+        "${CMAKE_BINARY_DIR}/${ARGV0}-build"
 )
+endmacro()
 
-# The gtest/gmock targets carry header search path dependencies
-# automatically when using CMake 2.8.11 or later. Otherwise we
-# have to add them here ourselves.
-if (CMAKE_VERSION VERSION_LESS 2.8.11)
-    include_directories("${gtest_SOURCE_DIR}/include")
-endif ()
-# GoogleTest end
+# include header path
+include_directories("${third_party_path}/Ogg/Ogg-src/include")
+include_directories("${CMAKE_BINARY_DIR}/Ogg-build/include")
+include_directories("${third_party_path}/Opus/Opus-src/include")
+include_directories("${third_party_path}/Opusfile/Opusfile-src/include")
+include_directories("${third_party_path}/Gtest/Gtest-src/googletest/include")
 
-set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_BUILD_TYPE "Debug")
-set(CMAKE_CXX_COMPILER g++)
-set(AGORA_MEDIA_SDK_DIR libs/agora_media_sdk)
+# download libs and declare subdirectory
+PREPARE_LIBS(Ogg)
 
-# Config of AgoraSDKDemoDlApp
-FILE(GLOB_RECURSE LOCAL_DEMODLAPP_CPP_FILES "${CMAKE_SOURCE_DIR}/src/dynamic_load_demo_main/*.cpp")
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer -fsanitize=address -Werror -std=c++11")
-
-include_directories(
-        /usr/local/include
-)
-
+# Opus depends ogg
 link_libraries(
-        dl
-        pthread
+        ogg
 )
+PREPARE_LIBS(Opus)
 
-add_executable(AgoraSDKDemoDlApp
-        ${LOCAL_DEMODLAPP_CPP_FILES}
+# opusfile depends ogg and opus
+link_libraries(
+        opus
 )
+PREPARE_LIBS(Opusfile)
+
+PREPARE_LIBS(Gtest)
+
+
+###    2. Build common libs    ###
+set(CMAKE_DEBUG_POSTFIX "")
+set(CMAKE_RELEASE_POSTFIX "")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer ${sanitizer} -Werror -std=c++14")
 
 # Config of AgoraSDKWrapper
-FILE(GLOB_RECURSE LOCAL_WRAPPER_CPP_FILES "${CMAKE_SOURCE_DIR}/src/rtc/*"
+FILE(GLOB_RECURSE LOCAL_WRAPPER_CPP_FILES ${rtc_src}
         "${CMAKE_SOURCE_DIR}/src/utils/*"
         "${CMAKE_SOURCE_DIR}/src/wrapper/*"
 )
 
 include_directories(
         ${CMAKE_SOURCE_DIR}
-        ${AGORA_MEDIA_SDK_DIR}/include
-        ${AGORA_MEDIA_SDK_DIR}/include/api2
         ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/include
         ${CMAKE_SOURCE_DIR}/test_data
-        /usr/local/include
-        /usr/local/include/opus
+        ${AGORA_MEDIA_SDK_HEADER_DIR}/include
+        ${AGORA_MEDIA_SDK_HEADER_DIR}/include/base
+        ${AGORA_MEDIA_SDK_HEADER_DIR}/include/api2
 )
 
 link_directories(
-        /usr/local/lib
-        /usr/local/lib64
-        /usr/lib/x86_64-linux-gnu
         ${AGORA_MEDIA_SDK_DIR}
 )
 
 link_libraries(
-        ogg
         opusfile
-        opus
-        agora_rtc_sdk
+        ${lib_thread}
+        ${lib_sdk}
 )
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer -fsanitize=address -std=c++11")
 
 add_library(AgoraSDKWrapper
         SHARED
         ${LOCAL_WRAPPER_CPP_FILES}
 )
 
-# Config of AgoraSdkDemoApp
-FILE(GLOB_RECURSE LOCAL_DEMOAPP_CPP_FILES "${CMAKE_SOURCE_DIR}/src/demo_main/main.cpp"
-        "${CMAKE_SOURCE_DIR}/src/wrapper_wrapper/*"
-)
 
-include_directories(
-        ${CMAKE_SOURCE_DIR}/src/include
-        /usr/local/include
+###    3. Build AgoraSDKQuickstart    ###
+# Config of AgoraSDKQuickstart
+FILE(GLOB_RECURSE LOCAL_DEMOAPP_CPP_FILES "${CMAKE_SOURCE_DIR}/src/AgoraSDKQuickstart/*.cpp"
+        "${CMAKE_SOURCE_DIR}/src/wrapper_wrapper/*"
 )
 
 link_libraries(
         AgoraSDKWrapper
 )
 
-add_executable(AgoraSdkDemoApp
+add_executable(AgoraSDKQuickstart
         ${LOCAL_DEMOAPP_CPP_FILES}
 )
 
-# Config of AgoraServerSdkDemoApp
-FILE(GLOB_RECURSE LOCAL_SERVER_DEMOAPP_CPP_FILES "${CMAKE_SOURCE_DIR}/src/demo_main/server_sdk_demo.cpp"
-        "${CMAKE_SOURCE_DIR}/src/wrapper_wrapper/*"
-)
 
-include_directories(
-        ${CMAKE_SOURCE_DIR}/src/include
-        /usr/local/include
-)
-
+###    4. Build AgoraSDKQuickstart    ###
 link_libraries(
-        AgoraSDKWrapper
+        dl
 )
+
+# Config of AgoraSDKQuickstartDl
+FILE(GLOB_RECURSE LOCAL_DEMODLAPP_CPP_FILES "${CMAKE_SOURCE_DIR}/src/AgoraSDKQuickstartDl/*.cpp")
+
+add_executable(AgoraSDKQuickstartDl
+        ${LOCAL_DEMODLAPP_CPP_FILES}
+)
+
+
+###    5. Build AgoraServerSdkDemoApp    ###
+
+# Config of AgoraServerSdkDemoApp
+FILE(GLOB_RECURSE LOCAL_SERVER_DEMOAPP_CPP_FILES "${CMAKE_SOURCE_DIR}/src/AgoraServerSdkDemoApp/*.cpp")
+
 add_executable(AgoraServerSdkDemoApp
         ${LOCAL_SERVER_DEMOAPP_CPP_FILES}
 )
+
+
+###    6. Build AgoraSamplesDemoApp    ###
+# Config for gtest demo build
+add_subdirectory(src/samples)
 
 SET(EXECUTABLE_OUTPUT_PATH bin/${COMPILE_PLAT})
 SET(LIBRARY_OUTPUT_PATH  bin/${COMPILE_PLAT})

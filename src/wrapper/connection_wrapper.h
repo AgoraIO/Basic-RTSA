@@ -7,12 +7,12 @@
 #pragma once
 
 #include "AgoraBase.h"
-#include "api2/IAgoraService.h"
-#include "api2/NGIAgoraRtcConnection.h"
+#include "IAgoraService.h"
+#include "NGIAgoraRtcConnection.h"
+#include "utils/common_utils.h"
+#include "local_user_wrapper.h"
 
-#include "utils/auto_reset_event.h"
-
-class LocalUserWrapper;
+#include <map>
 
 struct ConnectionConfig {
   bool play = false;
@@ -40,6 +40,18 @@ class ConnectionWrapper : public agora::rtc::IRtcConnectionObserver {
   bool Connect(const char* appid, const char* channelId, agora::user_id_t userId, int waitMs = DefaultConnectWaitTime);
   bool Disconnect(int waitMs = DefaultConnectWaitTime);
   std::shared_ptr<LocalUserWrapper> GetLocalUser();
+
+  int CreateDataStream(int &streamId, bool reliable, bool ordered);
+  int SendStreamMessage(int streamId, const char *data, size_t length);
+  int sendIntraRequest(uid_t uid);
+
+  agora::rtc::TConnectionInfo getConnectionInfo();
+
+  bool getDataStreamStats(agora::user_id_t userId, int streamId, DataStreamResult& result);
+
+  void clearDataStreamStats() {
+    data_stream_stats_.clear();
+  }
 
  public:
   // inherit from agora::rtc::IRtcConnectionObserver
@@ -76,6 +88,10 @@ class ConnectionWrapper : public agora::rtc::IRtcConnectionObserver {
 
   void onChannelMediaRelayStateChanged(int state, int code) override {}
 
+  void onStreamMessage(agora::user_id_t userId, int streamId, const char *data, size_t length) override;
+
+  void onStreamMessageError(agora::user_id_t userId, int streamId, int code, int missed, int cached) override;
+
  public:
   static std::shared_ptr<ConnectionWrapper> CreateConnection(agora::base::IAgoraService* service,
                                                              const ConnectionConfig& config);
@@ -86,4 +102,5 @@ class ConnectionWrapper : public agora::rtc::IRtcConnectionObserver {
   bool connected_;
   AutoResetEvent connect_ready_;
   AutoResetEvent disconnect_ready_;
+  std::map<std::pair<unsigned int, int>, DataStreamResult> data_stream_stats_;
 };

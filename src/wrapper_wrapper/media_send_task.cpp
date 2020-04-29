@@ -4,20 +4,22 @@
 //  Copyright (c) 2019 Agora.io. All rights reserved.
 //
 #include "media_send_task.h"
-
 #include "media_data_sender.h"
 #include "wrapper/statistic_dump.h"
-#include "wrapper/utils.h"
+#include "utils/common_utils.h"
+
+#include <thread>
 
 MediaSendTask::MediaSendTask(agora::base::IAgoraService* service, std::string threadName,
                              int cycles, bool sendAudio, bool sendVideo, bool sendMediaPacket,
-                             int uid)
+                             int sendDataStream, int uid)
     : service_(service),
       threadName_(threadName),
       cycles_(cycles),
       sendAudio_(sendAudio),
       sendVideo_(sendVideo),
       mediaPacket_(sendMediaPacket),
+      sendDataStream_(sendDataStream),
       audioCodec_(agora::rtc::AUDIO_CODEC_OPUS),
       videoCodec_(agora::rtc::VIDEO_CODEC_H264),
       multiSlice_(false),
@@ -92,7 +94,13 @@ void MediaSendTask::Run() {
           }
         }
       }
-      printf("Send audio/video of round %d end in thread %s\n", i, threadName_.c_str());
+
+      if (sendDataStream_ != 0) {
+        printf("Start to send DataStream of round %d in thread %s\n", i, threadName_.c_str());
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        audioVideoSender->sendDataStream(sendDataStream_);
+      }
+      printf("Send audio/video/DataStream of round %d end in thread %s\n", i, threadName_.c_str());
     }
   } else {
     printf("Connect to channel %s failed, tid %ld\n", threadName_.c_str(), gettid());

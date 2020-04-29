@@ -15,14 +15,10 @@
 #include "wrapper/media_packet_sender.h"
 #include "wrapper/utils.h"
 
-class AudioTest : public testing::Test {
- public:
-  void SetUp() override {}
+DECLARE_SAMPLE_CASES(RtsaAudioTest)
 
-  void TearDown() override {}
-};
 
-TEST_F(AudioTest, audio_packet_send_and_receive) {
+TEST_F(RtsaAudioTest, audio_packet_send_and_receive) {
   auto service = createAndInitAgoraService(false, true, true);
 
   // Create receive connection
@@ -36,7 +32,7 @@ TEST_F(AudioTest, audio_packet_send_and_receive) {
   auto conn_recv = ConnectionWrapper::CreateConnection(service, recv_config);
 
   // Receive connection join channel
-  ASSERT_TRUE(conn_recv->Connect(API_CALL_APPID, CONNECTION_TEST_DEFAULT_CNAME, "3"));
+  ASSERT_TRUE(conn_recv->Connect(AGORA_APP_ID, CONNECTION_TEST_DEFAULT_CNAME, "3"));
 
   // Create send connection and join channel
   ConnectionConfig config;
@@ -44,7 +40,7 @@ TEST_F(AudioTest, audio_packet_send_and_receive) {
   config.channelProfile = agora::CHANNEL_PROFILE_LIVE_BROADCASTING;
 
   auto conn_send = ConnectionWrapper::CreateConnection(service, config);
-  ASSERT_TRUE(conn_send->Connect(API_CALL_APPID, CONNECTION_TEST_DEFAULT_CNAME, "1"));
+  ASSERT_TRUE(conn_send->Connect(AGORA_APP_ID, CONNECTION_TEST_DEFAULT_CNAME, "1"));
 
   // Send connection start to send audio packets.
   auto factory = service->createMediaNodeFactory();

@@ -86,8 +86,8 @@ void StatisticDump::recordRtcStats(pid_t pid, int64_t tid, const agora::rtc::Rtc
   }
   if (statisticFile_ && updated) {
     snprintf(buffer, LogBufferSize,
-             "%ld,%d,%ld[%-u, %-u, %-u, %-u, %-u, %-u, %-u, %-u, %-u, %-u, %-u, %-f, %-f, %-f]\n",
-             time(nullptr), pid, tid, stats.duration, stats.txBytes, stats.rxBytes,
+             "%ld,%d,%lld[%-u, %-u, %-u, %-u, %-u, %-u, %-u, %-u, %-u, %-u, %-u, %-f, %-f, %-f]\n",
+             time(nullptr), pid, static_cast<long long int>(tid), stats.duration, stats.txBytes, stats.rxBytes,
              stats.txKBitRate, stats.rxKBitRate, stats.rxAudioKBitRate, stats.txAudioKBitRate,
              stats.rxVideoKBitRate, stats.txVideoKBitRate, stats.lastmileDelay, stats.userCount,
              stats.cpuAppUsage, stats.cpuTotalUsage,
@@ -117,7 +117,7 @@ void StatisticDump::dumpThreadFinalStats(int64_t tid) {
   std::lock_guard<std::mutex> lock(mutex_);
   if (threadTransportStatistic_.find(tid) != threadTransportStatistic_.end()) {
     std::shared_ptr<ThreadTransportStatistic> statistic = threadTransportStatistic_[tid];
-    snprintf(buffer, LogBufferSize, "%d,%ld[%-u, %-u, %-u, %-u]\n", getpid(), tid,
+    snprintf(buffer, LogBufferSize, "%d,%lld[%-u, %-u, %-u, %-u]\n", getpid(), static_cast<long long>(tid),
              statistic->txKBitRateMin, statistic->txKBitRateMax, statistic->lastmileDelayMin,
              statistic->lastmileDelayMax);
     fwrite(buffer, 1, strlen(buffer), statisticFile_);

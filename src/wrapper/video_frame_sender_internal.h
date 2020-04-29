@@ -58,3 +58,11 @@ struct IVF_PAYLOAD {
   uint32_t frame_type;
   uint64_t timestamp;
 };
+
+struct VideoPacket {
+  VideoPacket() : data(nullptr), size(0), flags(0), timestamp(0) {}
+  uint8_t* data;
+  int size;
+  int flags;
+  int64_t timestamp;  // ms
+};

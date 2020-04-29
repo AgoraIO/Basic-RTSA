@@ -39,8 +39,11 @@ bool EncodedAudioFrameSender::initialize(agora::base::IAgoraService* service,
   customAudioTrack->setEnabled(true);
   connection->GetLocalUser()->PublishAudioTrack(customAudioTrack);
 
+  AudioFileParserFactory::ParserConfig config;
+  config.filePath = file_path.c_str();
+  config.fileType = file_type;
   file_parser_ = std::move(
-      AudioFileParserFactory::Instance().createAudioFileParser(file_path.c_str(), file_type));
+      AudioFileParserFactory::Instance().createAudioFileParser(config));
   if (!file_parser_ || !file_parser_->open()) {
     printf("Open test file %s failed\n", file_path.c_str());
     return false;
@@ -92,7 +95,7 @@ void EncodedAudioFrameSender::sendAudioFrames() {
     }
   }
   if (verbose_) {
-    AGO_LOG("Send %ld test aac frames end, %d bytes\n", sent_audio_frames_, bytesnum);
+    AGO_LOG("Send %ld test aac frames end, %d bytes\n", (unsigned long)sent_audio_frames_, bytesnum);
   }
 
   std::this_thread::sleep_for(std::chrono::milliseconds(50));
@@ -105,17 +108,19 @@ AudioPcmFrameSender::~AudioPcmFrameSender() = default;
 bool AudioPcmFrameSender::initialize(agora::base::IAgoraService* service,
                                      agora::agora_refptr<agora::rtc::IMediaNodeFactory> factory,
                                      std::shared_ptr<ConnectionWrapper> connection) {
-  audio_pcm_frame_ender_ = std::move(factory->createAudioPcmDataSender());
-  if (!audio_pcm_frame_ender_) {
+  audio_pcm_frame_sender_ = std::move(factory->createAudioPcmDataSender());
+  if (!audio_pcm_frame_sender_) {
     return false;
   }
-  auto customAudioTrack = service->createCustomAudioTrack(audio_pcm_frame_ender_);
+  auto customAudioTrack = service->createCustomAudioTrack(audio_pcm_frame_sender_);
   customAudioTrack->setEnabled(true);
   connection->GetLocalUser()->PublishAudioTrack(customAudioTrack);
 
-  file_parser_ = AudioFileParserFactory::Instance().createAudioFileParser(
-      file_path.c_str(), AUDIO_FILE_TYPE::AUDIO_FILE_PCM);
-  ;
+  AudioFileParserFactory::ParserConfig config;
+  config.filePath = file_path.c_str();
+  config.fileType = AUDIO_FILE_TYPE::AUDIO_FILE_PCM;
+  file_parser_ = AudioFileParserFactory::Instance().createAudioFileParser(config);
+
   if (!file_parser_ || !file_parser_->open()) {
     printf("Open test file %s failed\n", file_path.c_str());
     return false;
@@ -138,7 +143,55 @@ void AudioPcmFrameSender::sendAudioFrames() {
     file_parser_->getNext(reinterpret_cast<char*>(dataBuffer), &length);
     auto overhead_begin = now_ms();
     if ((loop_time_ms != -1) && (overhead_begin - start_time) >= loop_time_ms) break;
-    audio_pcm_frame_ender_->sendAudioPcmData(dataBuffer, 0, samples_per_loop, sample_size,
+    audio_pcm_frame_sender_->sendAudioPcmData(dataBuffer, 0, samples_per_loop, sample_size,
+                                             file_parser_->getNumberOfChannels(),
+                                             file_parser_->getSampleRateHz());
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+  }
+}
+
+bool AudioRawPcmFileSender::initialize(agora::base::IAgoraService* service,
+                                       agora::agora_refptr<agora::rtc::IMediaNodeFactory> factory,
+                                       std::shared_ptr<ConnectionWrapper> connection) {
+  audio_pcm_frame_sender_ = std::move(factory->createAudioPcmDataSender());
+  if (!audio_pcm_frame_sender_) {
+    return false;
+  }
+  auto customAudioTrack = service->createCustomAudioTrack(audio_pcm_frame_sender_);
+  customAudioTrack->setEnabled(true);
+  connection->GetLocalUser()->PublishAudioTrack(customAudioTrack);
+
+  AudioFileParserFactory::ParserConfig config;
+  config.filePath = file_path.c_str();
+  config.sampleRateHz = sampleRateHz_;
+  config.numberOfChannels = channels_;
+  config.frameLength = (sampleRateHz_ / 100) * channels_ * 2;
+  config.fileType = AUDIO_FILE_TYPE::AUDIO_FILE_FIX_LENGTH_FRAME;
+  file_parser_ = AudioFileParserFactory::Instance().createAudioFileParser(config);
+
+  if (!file_parser_ || !file_parser_->open()) {
+    printf("Open test file %s failed\n", file_path.c_str());
+    return false;
+  }
+  return true;
+}
+
+void AudioRawPcmFileSender::sendAudioFrames() {
+  const int loop_time_ms = -1;
+  static constexpr int BufferSize = 4096;
+  int samples_per_loop = file_parser_->getSampleRateHz() / 100;
+  int sample_size = file_parser_->getNumberOfChannels() * file_parser_->getBitsPerSample() / 8;
+
+  unsigned char dataBuffer[BufferSize] = {0};
+  int length = 0;
+  int frames = 0;
+
+  auto start_time = now_ms();
+  while (file_parser_->hasNext()) {
+    file_parser_->getNext(reinterpret_cast<char*>(dataBuffer), &length);
+    auto overhead_begin = now_ms();
+    if ((loop_time_ms != -1) && (overhead_begin - start_time) >= loop_time_ms) break;
+    audio_pcm_frame_sender_->sendAudioPcmData(dataBuffer, 0, samples_per_loop, sample_size,
                                              file_parser_->getNumberOfChannels(),
                                              file_parser_->getSampleRateHz());
     std::this_thread::sleep_for(std::chrono::milliseconds(10));

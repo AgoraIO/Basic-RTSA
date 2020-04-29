@@ -9,6 +9,7 @@
 #include <string.h>
 #include <chrono>
 #include <thread>
+#include <iostream>
 
 #include "utils/file_parser/fixed_frame_length_audio_file_parser.h"
 #include "wrapper/audio_frame_sender.h"
@@ -38,7 +39,7 @@ bool MediaDataSender::connect(const char* channelId, agora::user_id_t userId) {
   config.channelProfile = agora::CHANNEL_PROFILE_LIVE_BROADCASTING;
 
   connection_ = ConnectionWrapper::CreateConnection(service_, config);
-  if (!connection_->Connect(API_CALL_APPID, channelId, userId)) {
+  if (!connection_->Connect(AGORA_APP_ID, channelId, userId)) {
     return false;
   }
   return true;
@@ -121,4 +122,30 @@ void MediaDataSender::sendVideoMediaPacket() {
   std::unique_ptr<MediaPacketSender> packet_sender(new MediaPacketSender(args, uid_));
   packet_sender->initialize(service_, factory_, connection_);
   packet_sender->sendPackets();
+}
+
+void MediaDataSender::sendDataStream(int dataStreamType) {
+  int stream_id = 0;
+  int ret = -1;
+
+  if (dataStreamType == 1)
+    ret = connection_->CreateDataStream(stream_id, true, true);
+  else
+    ret = connection_->CreateDataStream(stream_id, false, false);
+
+  if (ret < 0) {
+    printf("Fail to create data stream.\n");
+    return;
+  }
+
+  std::string msg = std::string(1024, 0);
+  int i = 0;
+  for (auto iter = msg.begin(); iter != msg.end(); iter ++, i ++) *iter = ((i % 256) - 128);
+  int count = 50;
+  while (count-- > 0) {
+    if (0 != connection_->SendStreamMessage(stream_id, msg.data(), msg.length()))
+      printf("Fail to send data stream.\n");
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+  }
 }

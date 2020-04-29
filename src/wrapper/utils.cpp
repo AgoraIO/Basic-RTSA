@@ -92,7 +92,7 @@ std::shared_ptr<ConnectionWrapper> createRecvConnection(agora::base::IAgoraServi
   auto connection = ConnectionWrapper::CreateConnection(service, config);
   std::ostringstream oss;
   oss << recv_config.uid;
-  if (!connection->Connect(API_CALL_APPID, channelId, oss.str().c_str())) {
+  if (!connection->Connect(AGORA_APP_ID, channelId, oss.str().c_str())) {
     printf("Connect to channel %s failed, tid %ld\n", channelId, gettid());
     return nullptr;
   }

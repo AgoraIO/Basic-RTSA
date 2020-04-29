@@ -17,14 +17,10 @@
 #include "wrapper/video_encoded_frame_receiver.h"
 #include "wrapper/video_frame_sender.h"
 
-class VideoTest : public testing::Test {
- public:
-  void SetUp() override {}
+DECLARE_SAMPLE_CASES(RtsaVideoTest)
 
-  void TearDown() override {}
-};
 
-TEST_F(VideoTest, h264_send_and_receive_encoded_frame) {
+TEST_F(RtsaVideoTest, h264_send_and_receive_encoded_frame) {
   auto service = createAndInitAgoraService(false, true, true);
 
   // Create receive connection
@@ -38,7 +34,7 @@ TEST_F(VideoTest, h264_send_and_receive_encoded_frame) {
   auto conn_recv = ConnectionWrapper::CreateConnection(service, recv_config);
 
   // Receive connection join channel
-  ASSERT_TRUE(conn_recv->Connect(API_CALL_APPID, CONNECTION_TEST_DEFAULT_CNAME, "3"));
+  ASSERT_TRUE(conn_recv->Connect(AGORA_APP_ID, CONNECTION_TEST_DEFAULT_CNAME, "3"));
 
   // Create send connection and join channel
   ConnectionConfig config;
@@ -46,7 +42,7 @@ TEST_F(VideoTest, h264_send_and_receive_encoded_frame) {
   config.channelProfile = agora::CHANNEL_PROFILE_LIVE_BROADCASTING;
 
   auto conn_send = ConnectionWrapper::CreateConnection(service, config);
-  ASSERT_TRUE(conn_send->Connect(API_CALL_APPID, CONNECTION_TEST_DEFAULT_CNAME, "1"));
+  ASSERT_TRUE(conn_send->Connect(AGORA_APP_ID, CONNECTION_TEST_DEFAULT_CNAME, "1"));
 
   // Send connection start to send encoded video frames.
   auto factory = service->createMediaNodeFactory();
@@ -77,7 +73,7 @@ TEST_F(VideoTest, h264_send_and_receive_encoded_frame) {
   conn_recv->Disconnect();
 }
 
-TEST_F(VideoTest, video_packet_send_and_receive) {
+TEST_F(RtsaVideoTest, video_packet_send_and_receive) {
   auto service = createAndInitAgoraService(false, true, true);
 
   // Create receive connection
@@ -92,7 +88,7 @@ TEST_F(VideoTest, video_packet_send_and_receive) {
   auto conn_recv = ConnectionWrapper::CreateConnection(service, recv_config);
 
   // Receive connection join channel
-  ASSERT_TRUE(conn_recv->Connect(API_CALL_APPID, CONNECTION_TEST_DEFAULT_CNAME, "3"));
+  ASSERT_TRUE(conn_recv->Connect(AGORA_APP_ID, CONNECTION_TEST_DEFAULT_CNAME, "3"));
 
   // Create send connection and join channel
   ConnectionConfig config;
@@ -100,7 +96,7 @@ TEST_F(VideoTest, video_packet_send_and_receive) {
   config.channelProfile = agora::CHANNEL_PROFILE_LIVE_BROADCASTING;
 
   auto conn_send = ConnectionWrapper::CreateConnection(service, config);
-  ASSERT_TRUE(conn_send->Connect(API_CALL_APPID, CONNECTION_TEST_DEFAULT_CNAME, "1"));
+  ASSERT_TRUE(conn_send->Connect(AGORA_APP_ID, CONNECTION_TEST_DEFAULT_CNAME, "1"));
 
   // Send connection start to send encoded video frames.
   auto factory = service->createMediaNodeFactory();

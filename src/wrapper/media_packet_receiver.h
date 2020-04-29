@@ -8,8 +8,8 @@
 
 #include "AgoraBase.h"
 #include "IAgoraMediaEngine.h"
-#include "api2/IAgoraService.h"
-#include "api2/NGIAgoraRtcConnection.h"
+#include "IAgoraService.h"
+#include "NGIAgoraRtcConnection.h"
 
 #include "audio_frame_observer.h"
 

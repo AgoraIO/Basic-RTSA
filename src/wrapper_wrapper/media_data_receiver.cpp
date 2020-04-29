@@ -9,8 +9,8 @@
 #include <functional>
 #include <thread>
 
-#include "api2/IAgoraService.h"
-#include "api2/NGIAgoraLocalUser.h"
+#include "IAgoraService.h"
+#include "NGIAgoraLocalUser.h"
 
 #include "wrapper/audio_frame_observer.h"
 #include "wrapper/audio_pcm_frame_handler.h"

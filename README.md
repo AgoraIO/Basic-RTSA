@@ -1,70 +1,96 @@
+Agora RTSA Quickstart
 
-[English Documents Available](README_en.md)
+*English | [中文](README.zh.md)*
 
-## 概述
+## Overview
 
-**Agora SDK Demo** 用于演示 **Agora** 声网 **RTC SDK API** 的基本用法，主要包含声网 **RTC SDK** 提供的音频发送、视频发送和视频接收等功能。
+**Agora SDK Quickstart** is a demo used for demonstrating the basic functions of **Agora RTSA SDK**, which mainly include sending and receiving audio and video.
 
-## SDK Demo 编译(For android)
+## Prerequisites
+### Development Environment
 
-切换到 android 目录下，并执行 ndk-build 命令：
-```
-$ cd AgoraSDKDemo/android
-$ ndk-build
-```
-
-## SDK Demo 编译(For linux)
-
-**Linux** 下通过执行如下命令进行 **SDK Demo** 编译：
-
-```
-$ cd agora_sdk_demo/
-$ mkdir build
-$ cd build
-$ cmake ..
-$ make
-```
-
-正常结束即可完成编译，产生 **AgoraSdkDemoApp** 可执行文件。
-
-## SDK Demo运行
-
-#### 参数
-
-**SDK Demo** 支持传递多个参数选项，来控制其行为：
-
-* **-a ：** 用于指定音频发送测试时发送的音频类型，参数值为 **1** 表示发送 **OPUS**，参数值为 **3** 表示发送 **WAV**，参数值为 **7** 表示发送 **AACLC**。默认值为 **1**。
-* **-v ：** 用于指定视频发送测试时发送的视频类型，参数值为 **1** 表示发送 **VP8**，参数值为 **2** 表示发送 **H.264**。默认是 **2**。
-* **-j ：** 用于指定发送测试时的并发度，即同一时刻起的并发发送音视频流的线程数。默认值为 **1**。
-* **-m ：** 用于指定发送测试时发送内容，参数值为 **0** 表示 **音频和视频都不发**，参数值为 **1** 表示 **只发视频**，参数值为 **2** 表示 **只发音频**，参数值为 **3** 表示 **音频和视频都发**。默认值为 **2**。
-* **-n ：** 用于指定发送测试的运行轮次。**SDK Demo** 中用于发送测试的音频测试文件或视频测试文件时长为几十秒到几分钟，这个参数用于控制发送这些测试文件的次数。默认值为 **1**。
-* **-r ：** 用于指定demo执行接收测试，demo默认执行发送测试，参数为 **0** 表示pull模式接收数据，参数为 **1** 表示 **observer模式** 接收数据。默认值为 **0**。
-* **-d ：** 用于指定接收测试时的持续时间，只在 **-r** 时有用。
-* **-u ：** 用于指定测试 **userId** ，如果会是多个用户测试，会在该 **userId** 基础上进行变化产生其他的 **userId** 。
-* **-c ：** 用于指定测试频道名，默认频道名为 **conn_test_zzz** 。
-* **-s ：** 用于observer形式接收时数据，将数据保存到文件，文件格式为 **wav**，recording/playback/mixed 默认文件名是 **user_pcm_audio_data.wav**，before mixed 默认文件名是 **uid + ${uid} + _user_pcm_audio_data.wav**。
-    * 参数值为 **0** 表示保存recording数据，即 agora::media::IAudioFrameObserver::onRecordAudioFrame 对应的audio frame（RTSA2.0不支持该模式）
-    * 参数值为 **1** 表示保存playback数据，即 agora::media::IAudioFrameObserver::onPlaybackAudioFrame 对应的audio frame
-    * 参数值为 **2** 表示保存before mixed数据，即 agora::media::IAudioFrameObserver::onPlaybackAudioFrameBeforeMixing 对应的audio frame
-    * 参数值为 **3** 表示保存mixed数据，即 agora::media::IAudioFrameObserver::onMixedAudioFrame 对应的audio frame（RTSA2.0不支持该模式）
-* **-p ：** 用于指定音视频以 **Media Packet** 与 **Control Packet** 进行 **Raw data** 的传输，且接收端只能以 **observer** 方式，即 **-p -r 1**。
-* **-l ：** 用于使能本地 **audio recorder** ，默认关闭，且 **RTSA2.0** 不支持该功能。
-
-#### 例子
-
-```
-$ build/AgoraSDKDemoApp -a 8 -c test_cname     # 单轮单线程发送AAC测试文件，频道名为`test_cname`
-$ build/AgoraSDKDemoApp -j 2 -m 1              # 并发2个线程发送视频
-$ build/AgoraSDKDemoApp -n 2                   # 进行两次测试
-$ build/AgoraSDKDemoApp -r 0 -d 10000          # pull形式接收10秒测试数据，单位毫秒
-$ build/AgoraSDKDemoApp -j 10 -u 10000         # 并发10个线程发送音视频，用户Id分别是10000，10001，10002... 10009
-$ build/AgoraSDKDemoApp -r 1 -j 5 -d 20000     # 5个用户observer形式接收20秒测试数据，单位毫秒
-$ build/AgoraSDKDemoApp -r 1 -s 1              # observer形式接收数据并保存文件，文件名为`user_pcm_audio_data.wav`
-```
-
-## 需要使用客户自己appId
+### Need to use your own app Id
 
 ```cpp
-// AgoraSDKDemo/AgoraSDKWrapper/src/Utils.cpp
-#define API_CALL_APPID "use your own appid"  // 替换成自己appId
+// src/wrapper/utils.h
+#define API_CALL_APPID "use your own app id" // Replace with your own appId
+```
+
+## Compile Quickstart
+
+### Android
+
+```
+$ sh ./build_android.sh
+# build_android.sh 参数说明
+# -t 参数为 rtsa / rtc ，选择构建 RTSA 还是 RTC ，默认为 rtsa
+# -a 参数为 armeabi-v7a / arm64-v8a / x86 选择架构，默认为 arm64-v8a
+# -v 参数为 Android API Level ，默认为 24
+# -b 参数为 build / rebuild / clean ，默认为 rebuild
+# -m 开启 sanitizer ，默认不开启
+
+# 需要将 build_android/bin/${arch_abi} 目录 push 到 Android 设备
+$ export LD_LIBRARY_PATH=./libs
+```
+
+### Linux
+
+Compile **Agora RTSA Quickstart** by executing the following command in Linux:
+
+```
+# build_linux.sh 参数 "-b build/rebuild/clean" 默认为 "-b rebuild" 
+$ sh ./build_linux.sh
+$ cd build_linux/bin/x64
+```
+
+Compilation can be completed normally, and the Quickstart executable file is generated.
+
+## Run Quickstart
+
+### Parameters
+
+You can set the following parameters when running **Quickstart** to control its behavior:
+
+* **-a** : Specify the type of audio that the demo sends for audio transmission test:
+    * **1**: (Default) **OPUS**.
+    * **3**: **WAV**.
+    * **7**: **AACLC**.
+* **-v** : Specify the type of video that the demo sends for video transmission test. 
+    * **1**: **VP8**.
+    * **2**: (Default) **H.264**.
+* **-j** : Specify the degree of concurrency when sending a test, that is, the number of threads that send audio and video streams concurrently at the same time. The default value is 1.
+* **-m** : Specify the content to be sent during the sending test.
+    * **0**: Neither audio nor video.
+    * **1**: Only video.
+    * **2**: (Default) Only audio.
+    * **3**: Both audio and video.
+* **-n** : Specify the run of the test to be sent. The length of the audio test file or video test file used to send tests in the SDK Demo is tens of seconds to several minutes. This parameter is used to control the number of times these test files are sent. The default value is **1**.
+* **-r** : Specify the demo to perform the receiving test. The demo performs the sending test by default. 
+    * **0**: (Default) **pull mode** receives data
+    * **1**: **observer mode** receive Data. 
+* **-b** : Specify the form of sending and receiving DataStream by demo. 
+    * **0**: (Default) not open.
+    * **1**: **reliable/ordered**.
+    * **2**: **unreliable/unordered**.
+* **-d** : Used to specify the duration of the reception test, only useful when **-r**.
+* **-u** : Used to specify the test userId. If there are multiple user tests, changes will be made based on this userId to generate other userIds.
+* **-c** : Used to specify the test channel name. The default channel name is **conn_default_rtsa**.
+* **-s ：** Used to receive data in the form of an observer, save the data to a file, the file format is wav. For **recording/playback/mixed** types saving, the default file name is **user_pcm_audio_data.wav**; For **before-mixed** type saving, the default file name is **uid + ${uid} + _user_pcm_audio_data.wav**。
+    * **0**: saving **recording** data, i.e. agora::media::IAudioFrameObserver::onRecordAudioFrame receives(**RTSA2.0 not supported**)
+    * **1**: saving **playback** data, i.e. agora::media::IAudioFrameObserver::onPlaybackAudioFrame receives
+    * **2**: saving **before mixed** data, i.e. agora::media::IAudioFrameObserver::onPlaybackAudioFrameBeforeMixing receives
+    * **3**: saving **mixed** data, i.e. agora::media::IAudioFrameObserver::onMixedAudioFrame receives(**RTSA2.0 not supported**)
+* **-p** : Used to specify that Raw data is transmitted using Media Packet and Control Packet for audio and video, and the receiver can only use observer mode, that is, **-p -r 1**.
+
+### example
+
+```
+$ ./RTSAQuickstart -a 8 -c rtsa           # Send AAC test file in a single round and single thread, the channel name is `rtsa`
+$ ./RTSAQuickstart -j 2 -m 1              # Send video concurrently with 2 threads
+$ ./RTSAQuickstart -n 2                   # Tested twice
+$ ./RTSAQuickstart -r 0 -d 10000          # Receive 10 seconds test data in pull mode, unit is millisecond
+$ ./RTSAQuickstart -j 10 -u 10000         # 10 threads send audio and video concurrently, user Id is 10000, 10001, 10002 ... 10009
+$ ./RTSAQuickstart -r 1 -j 5 -d 20000     # 5 users receive 20 seconds of test data in the form of an observer, in milliseconds
+$ ./RTSAQuickstart -r 1 -s 1              # Receives data in the form of an observer and saves the file with the file name `user_pcm_audio_data.wav.wav`
+$ ./RTSAQuickstart -r 2 -b 1              # Send and receive DataStream data in reliable / ordered 
 ```

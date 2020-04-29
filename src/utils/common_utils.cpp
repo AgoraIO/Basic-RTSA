@@ -4,11 +4,11 @@
 //  Copyright (c) 2019 Agora.io. All rights reserved.
 //
 
-#include "auto_reset_event.h"
+#include "common_utils.h"
 
-inline uint64_t tick_ms() {
+uint64_t now_ms() {
   return std::chrono::duration_cast<std::chrono::milliseconds>(
-             std::chrono::steady_clock::now().time_since_epoch())
+             std::chrono::system_clock::now().time_since_epoch())
       .count();
 }
 
@@ -20,7 +20,7 @@ void AutoResetEvent::Set() {
 
 int AutoResetEvent::Wait(int wait_ms) {
   std::unique_lock<std::mutex> _(lock_);
-  int64_t expired_time = tick_ms() + wait_ms;
+  int64_t expired_time = now_ms() + wait_ms;
   // prevent spurious wakeups from doing harm
   while (!signal_) {
     if (wait_ms < 0) {
@@ -36,7 +36,7 @@ int AutoResetEvent::Wait(int wait_ms) {
       return -1;
     }
     // false wakeup
-    if (tick_ms() > expired_time) {
+    if (now_ms() > expired_time) {
       return -1;
     }
   }

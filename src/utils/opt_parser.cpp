@@ -12,8 +12,6 @@
 
 using namespace std;
 
-namespace agora {
-namespace base {
 #if defined(_WIN32) && !defined(__GNUC__)
 
 enum {no_argument = 0, required_argument, optional_argument};
@@ -473,8 +471,5 @@ void opt_parser::print_usage(const char *exec_file, ostream &sout) const {
       sout << "--" << f->second.long_opt << "     (" << f->second.stru_opt.help <<
           ")" << endl;
   }
-}
-
-}
 }
 

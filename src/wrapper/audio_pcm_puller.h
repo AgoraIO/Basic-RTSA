@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <string>
 
-#include "api2/NGIAgoraLocalUser.h"
+#include "NGIAgoraLocalUser.h"
 
 class AudioPCMFrameHandler;
 

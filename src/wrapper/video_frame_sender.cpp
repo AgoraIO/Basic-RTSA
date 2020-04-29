@@ -4,23 +4,115 @@
 //  Copyright (c) 2020 Agora.io. All rights reserved.
 //
 
+#include "AgoraMediaBase.h"
 #include "video_frame_sender.h"
+#include "utils/file_parser/video_file_parser_factory.h"
+#include "wrapper/connection_wrapper.h"
+#include "wrapper/utils.h"
+#include "utils/I420_buffer.h"
+#include "utils/bitbuffer.h"
+#include "test_data/foreman_frames.h"
 
-#include <stdio.h>
+#include <chrono>
 #include <thread>
 #include <cstring>
-
-#include "test_data/foreman_frames.h"
-#include "connection_wrapper.h"
-#include "local_user_wrapper.h"
-#include "utils.h"
-#include "utils/bitbuffer.h"
-#include "utils/file_parser/h264_file_parser.h"
-#include "video_frame_sender_internal.h"
 
 VideoFrameSender::VideoFrameSender() = default;
 
 VideoFrameSender::~VideoFrameSender() = default;
+
+void VideoFrameSender::setVerbose(bool verbose) { verbose_ = verbose; }
+
+ExternalVideoFrameSender::ExternalVideoFrameSender(const char* filepath)
+    : file_path(filepath) {}
+
+ExternalVideoFrameSender::~ExternalVideoFrameSender() = default;
+
+void ExternalVideoFrameSender::setVideoFrameInfo(int width, int height, int framerate,
+    agora::media::VIDEO_PIXEL_FORMAT format) {
+  width_ = width;
+  height_ = height;
+  framerate_ = framerate;
+  format_ = format;
+  assert(format_ == agora::media::VIDEO_PIXEL_I420); // only I420 is supported.
+}
+
+bool ExternalVideoFrameSender::initialize(agora::base::IAgoraService* service,
+                                          agora::agora_refptr<agora::rtc::IMediaNodeFactory> factory,
+                                          std::shared_ptr<ConnectionWrapper> connection) {
+  video_external_frame_sender_ = std::move(factory->createVideoFrameSender());
+  if (!video_external_frame_sender_) {
+    printf("Create video yuv frame sender.\n");
+    return false;
+  }
+  if (!width_ || !height_ || !framerate_) {
+    printf("Set video frame info first.\n");
+    return false;
+  }
+
+  auto customVideoTrack =
+      service->createCustomVideoTrack(video_external_frame_sender_);
+
+  agora::rtc::VideoEncoderConfiguration encoder_config;
+  encoder_config.codecType = agora::rtc::VIDEO_CODEC_VP8;
+  encoder_config.bitrate = 3 * 1000 * 1000;
+  encoder_config.minBitrate = 1 * 1000 * 1000;
+  encoder_config.dimensions.width = width_;
+  encoder_config.dimensions.height = height_;
+  encoder_config.frameRate = framerate_;
+  customVideoTrack->setVideoEncoderConfiguration(encoder_config);
+
+  customVideoTrack->setEnabled(true);
+  connection->GetLocalUser()->PublishVideoTrack(customVideoTrack);
+
+  VideoFileParserFactory::ParserConfig config;
+  config.filePath = file_path.c_str();
+  config.fileType = VIDEO_FILE_TYPE::VIDEO_FILE_YUV;
+  config.width = width_;
+  config.height = height_;
+  config.pixelFormat = format_;
+  file_parser_ = std::move(
+      VideoFileParserFactory::Instance().createVideoFileParser(config));
+  if (!file_parser_ || !file_parser_->open()) {
+    printf("Open test file %s failed\n", file_path.c_str());
+    return false;
+  }
+  printf("Open test file %s successfully\n", file_path.c_str());
+  return true;
+}
+
+void ExternalVideoFrameSender::sendVideoFrames() {
+  const int loop_time_ms = -1;
+  int wait_interval = framerate_ ? (1000 / framerate_) : 30;
+
+  I420Buffer* buffer = I420Buffer::Create(width_, height_);
+
+  auto start_time = now_ms();
+  auto overhead_begin = now_ms();
+  while (file_parser_->hasNext()) {
+    file_parser_->getNext(reinterpret_cast<char*>(const_cast<uint8_t*>(buffer->Data())), nullptr);
+    if ((loop_time_ms != -1) && (overhead_begin - start_time) >= loop_time_ms) break;
+
+    agora::media::ExternalVideoFrame video_frame;
+    video_frame.type = agora::media::ExternalVideoFrame::VIDEO_BUFFER_TYPE::VIDEO_BUFFER_RAW_DATA;
+    video_frame.format = agora::media::VIDEO_PIXEL_FORMAT::VIDEO_PIXEL_I420;
+    video_frame.buffer = (void*)buffer->Data();
+    video_frame.stride = buffer->width();
+    video_frame.height = buffer->height();
+    video_frame.cropBottom = video_frame.cropLeft = video_frame.cropRight = video_frame.cropTop = 0;
+    video_frame.rotation = 0;
+    video_frame.timestamp = 0;
+
+    video_external_frame_sender_->sendVideoFrame(video_frame);
+
+    auto overhead = now_ms() - overhead_begin;
+    std::this_thread::sleep_for(std::chrono::milliseconds(wait_interval - overhead));
+    overhead_begin = now_ms();
+    sent_video_frames_ ++;
+  }
+
+  if (buffer) I420Buffer::Release(buffer);
+}
 
 VideoVP8FrameSender::VideoVP8FrameSender(const char* filepath) : file_path_(filepath) {}
 
@@ -51,6 +143,11 @@ void VideoVP8FrameSender::sendVideoFrames() {
   const int loop_time_ms = -1;
   const char* test_file = file_path_.c_str();
   FILE* f = fopen(test_file, "rb");
+  if (f == nullptr)
+    printf("Fail to open %s\n", file_path_.c_str());
+  else
+    printf("Open %s successfully\n", file_path_.c_str());
+  
   IVF_HEADER header = {0};
   uint64_t last_time_diff = 0;
   uint64_t last_time_stamp = 0;
@@ -60,7 +157,11 @@ void VideoVP8FrameSender::sendVideoFrames() {
 #define CONVERT_TO_INT(a, b, c, d) \
     ((ENDIANNESS == 'l') ? (a | b << 8 | c << 16 | d << 24) : (a << 24 | b << 16 | c << 8 | d))
 
-  fread(&header, sizeof(header), 1, f);
+  size_t len = fread(&header, 1, sizeof(header), f);
+  if (len < sizeof(header)) {
+    printf("Fail to read header of video vp8, len = %d, header length = %d\n", (int)len, (int)sizeof(header));
+    return;
+  }
   if (header.codec == CONVERT_TO_INT('V', 'P', '8', '0')) {
     codec = agora::rtc::VIDEO_CODEC_VP8;
   } else if (header.codec == CONVERT_TO_INT('V', 'P', '9', '0')) {
@@ -78,14 +179,22 @@ void VideoVP8FrameSender::sendVideoFrames() {
     auto overhead_begin = now_ms();
     if ((loop_time_ms != -1) && (overhead_begin - start_time) >= loop_time_ms) break;
     IVF_PAYLOAD payload = {0};
-    fread(&payload, sizeof(payload), 1, f);
+    len = fread(&payload, 1, sizeof(payload), f);
+    if (len < sizeof(payload)) {
+      printf("Fail to read video vp8 payload.\n");
+      return;
+    }
     if (payload.length == 0) {
       fseek(f, header.head_len, SEEK_SET);
       last_time_stamp = 0;
       continue;
     }
     char* buf = new char[payload.length];
-    fread(buf, payload.length, 1, f);
+    len = fread(buf, 1, payload.length, f);
+    if (len < sizeof(payload.length)) {
+      printf("Fail to read video vp8 payload buffer.\n");
+      return;
+    }
     agora::rtc::VIDEO_FRAME_TYPE frame_type;
     if (payload.frame_type == webrtc::kVideoFrameKey) {
       frame_type = agora::rtc::VIDEO_FRAME_TYPE_KEY_FRAME;
@@ -261,14 +370,6 @@ void VideoH264FileSender::sendVideoFrames() {
 
   AGO_LOG("Total read length %d, total send lenth %d\n", totalLength, totalSendLenth);
 }
-
-struct VideoPacket {
-  VideoPacket() : data(nullptr), size(0), flags(0), timestamp(0) {}
-  uint8_t* data;
-  int size;
-  int flags;
-  int64_t timestamp;  // ms
-};
 
 VideoH264FramesSender::VideoH264FramesSender() = default;
 

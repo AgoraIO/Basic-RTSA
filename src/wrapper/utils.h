@@ -4,37 +4,28 @@
 //  Copyright (c) 2019 Agora.io. All rights reserved.
 //
 #pragma once
+
 #include <chrono>
 #include <vector>
 #include <string>
 
-#include "api2/IAgoraService.h"
+#include "IAgoraService.h"
+#include "utils/common_utils.h"
 
-#define CONNECTION_TEST_DEFAULT_CNAME "conn_test_zzz"
+#define CONNECTION_TEST_DEFAULT_CNAME "conn_default_rtsa"
 
-#define API_CALL_APPID "Your Own APPID"
+#define AGORA_APP_ID "Your Own APPID"
 
-#if defined(__linux__) && !defined(__ANDROID__)
-#include <syscall.h>
-#define gettid() syscall(SYS_gettid)
-#else
-#define gettid() 0
-#endif
-
-#define AGO_LOG printf
-
-static union { char c[4]; unsigned long mylong; } endian_test = { { 'l', '?', '?', 'b' } };
-#define ENDIANNESS ((char)endian_test.mylong)
+#define DECLARE_SAMPLE_CASES(type) \
+class type : public testing::Test { \
+ public: \
+  void SetUp() override {} \
+  void TearDown() override {} \
+};
 
 void dumpByteArray(const char* byteArray, int size);
 
 std::string generateChannelName(int postfix, const char* cname, bool containPidInfo = false);
-
-inline uint64_t now_ms() {
-  return std::chrono::duration_cast<std::chrono::milliseconds>(
-             std::chrono::system_clock::now().time_since_epoch())
-      .count();
-}
 
 agora::base::IAgoraService* createAndInitAgoraService(bool enableAudioDevice,
                                                       bool enableAudioProcessor, bool enableVideo);
@@ -78,6 +69,14 @@ struct AudioDataObserverParams {
 enum VideoRecvMode : uint8_t {
   VideoRecvEncodedFrame, // Receive with puller or observer
   VideoRecvDecodedFrame, // Receive with ADM for playing or observer
+};
+
+// enum for clockwise rotation.
+enum VideoRotation {
+  kVideoRotation_0 = 0,
+  kVideoRotation_90 = 90,
+  kVideoRotation_180 = 180,
+  kVideoRotation_270 = 270
 };
 
 struct MediaDataRecvConfig {

@@ -12,7 +12,7 @@
 #include <unistd.h>
 #include <vector>
 
-#include "api2/IAgoraService.h"
+#include "IAgoraService.h"
 
 #include "media_data_receiver.h"
 #include "media_data_sender.h"
@@ -35,12 +35,12 @@ static bool isRecv = false;
 static int recvType = 0;
 static bool mediaPacket = false;
 static std::string connection_test_cname = CONNECTION_TEST_DEFAULT_CNAME;
-static bool startRecorder = false;
+static int enable_data_stream = 0;
 
 void parseArgs(int argc, char* argv[]) {
   char* ptr = nullptr;
   int ch = 0;
-  while ((ch = getopt(argc, argv, "a:v:j:d:hm:n:u:s:r:pc:l")) != -1) {
+  while ((ch = getopt(argc, argv, "a:v:j:d:hm:n:u:s:r:pc:b:l")) != -1) {
     switch (ch) {
       case 'a':
         audioCodec = atoi(optarg);
@@ -83,8 +83,8 @@ void parseArgs(int argc, char* argv[]) {
       case 'c':
         connection_test_cname = optarg;
         break;
-      case 'l':
-        startRecorder = true;
+      case 'b':
+        enable_data_stream = atoi(optarg);
         break;
       case '?':
         printf("Unknown option: %c\n", static_cast<char>(optopt));
@@ -127,7 +127,13 @@ void getRecvType(bool& recv, int& type) {
   type = recvType;
 }
 
-bool enableAudioDevice() { return startRecorder && isRecv && (recvType == 1); }
+bool enableAudioDevice() {
+#if defined(RTC_TARGET)
+  return true;
+#else
+  return false;
+#endif
+}
 
 enum VIDEO_CODEC_TYPE {
   /** 1: VP8. */
@@ -169,7 +175,7 @@ void startConcurrentSend() {
   for (int i = 0; i < concurrency; ++i) {
     std::shared_ptr<MediaSendTask> task = std::make_shared<MediaSendTask>(
         sService, generateChannelName(i + startUid, connection_test_cname.c_str(), false), cycles,
-        sendAudio, sendVideo, mediaPacket, 2 * (i + startUid) + 3);
+        sendAudio, sendVideo, mediaPacket, enable_data_stream, 2 * (i + startUid) + 3);
     task->setAudioCodecType(getAudioCodecType(audioCodec));
     task->setVideoCodecType(getVideoCodecType(videoCodec), multiSlice);
     tasks.push_back(task);

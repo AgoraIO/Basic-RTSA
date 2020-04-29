@@ -3,3 +3,5 @@
 .project
 .settings/
 test_data/
+libs/
+cmake-build-debug/

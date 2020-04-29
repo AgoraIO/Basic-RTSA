@@ -8,8 +8,8 @@
 
 #include <string>
 
-#include "api2/IAgoraService.h"
-#include "api2/NGIAgoraMediaNodeFactory.h"
+#include "IAgoraService.h"
+#include "NGIAgoraMediaNodeFactory.h"
 #include "utils/file_parser/audio_file_parser_factory.h"
 
 class AudioFileParser;

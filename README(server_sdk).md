@@ -3,16 +3,12 @@
 
 **Agora Server SDK Demo** 用于演示 **Agora** 声网 **RTC SDK API** 的在Linux Server端的基本用法，目前包含了声网 **RTC SDK API** 提供的音频、视频裸数据发送功能。
 
-## Server SDK Demo 编译 (For Linux)
-
-**Linux** 下通过执行如下命令进行所有 **SDK Demo** 的编译：
+**Linux** 下通过执行如下命令进行 **Server SDK Demo** 编译：
 
 ```
-$ cd agora_sdk_demo/
-$ mkdir build
-$ cd build
-$ cmake ..
-$ make AgoraServerSdkDemoApp
+# build_linux.sh 参数 "-b build/rebuild/clean" 默认为 "-b rebuild" 
+$ ./build_linux.sh -t rtc
+$ cd build_linux/bin/x64
 ```
 
 正常结束即可完成编译，产生 **AgoraServerSdkDemoApp** 可执行文件。
@@ -36,5 +32,5 @@ $ make AgoraServerSdkDemoApp
 
 ```
 # 发送pcm和yuv裸数据，频道名为`test_cname`，视频分辨率为`640x360`，视频目标码率为`500kbps`，参数`XXXXXX`需要替换为用户自己的appId
-$ build/AgoraServerSdkDemoApp --addId XXXXXX --channelId test_cname --uid 123456 --audioFile test_audio.pcm --videoFile test_video.yuv --width 640 --height 360 --bitrate 500000
+$ ./AgoraServerSdkDemoApp --addId XXXXXX --channelId test_cname --uid 123456 --audioFile test_audio.pcm --videoFile test_video.yuv --width 640 --height 360 --bitrate 500000
 ```

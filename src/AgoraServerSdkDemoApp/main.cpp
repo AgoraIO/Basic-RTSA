@@ -101,7 +101,7 @@ static void SampleSendVideoFrame(const SampleOptions& options,
     } else if (feof(file)) {
       fclose(file);
       file = nullptr;
-      AG_LOG(ERROR, "end of video file...\n");
+      AG_LOG(INFO, "end of video file...\n");
     } else {
       AG_LOG(ERROR, "unknown error\n");
     }
@@ -133,7 +133,7 @@ static void SignalHandler(int sigNo) {
 
 int main(int argc, char* argv[]) {
   SampleOptions options;
-  agora::base::opt_parser optParser;
+  opt_parser optParser;
 
   optParser.add_long_opt("appId", &options.appId, "App Id");
   optParser.add_long_opt("channelId", &options.channelId, "Channel Id");
@@ -177,6 +177,8 @@ int main(int argc, char* argv[]) {
   config.channelProfile = agora::CHANNEL_PROFILE_LIVE_BROADCASTING;
   config.sampleRateHz_ = options.audio.sampleRate;
   config.numberOfChannels_ = options.audio.numOfChannels;
+  config.subscribeAllAudio = false;
+  config.subscribeAllVideo = false;
   auto connection = ConnectionWrapper::CreateConnection(service, config);
   if (!connection) {
     AG_LOG(ERROR, "failed to creating Agora connection!\n");

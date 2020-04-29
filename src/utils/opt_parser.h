@@ -5,8 +5,7 @@
 #include <string>
 #include <unordered_map>
 #include <map>
-namespace agora {
-namespace base {
+
 struct ipv4 {
   union {
     uint32_t ip;
@@ -98,7 +97,4 @@ class opt_parser {
   mutable std::map<int, ex_internal_opt> ex_long_opts_;
   int sequence_;
 };
-
-}
-}
 

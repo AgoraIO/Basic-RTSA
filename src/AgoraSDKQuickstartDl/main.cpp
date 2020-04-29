@@ -44,7 +44,12 @@ void* loadLibraryAndTransport(int argc, char* argv[], const char* transportLibar
       (StartObserverRecvFuncType)dlsym(lib, StartObserverRecvFuncName);
   DestroyFuncType destroyFunc = (DestroyFuncType)dlsym(lib, DestroyFuncName);
 
-  bool enableAudioDevice = (recv && recvType == 1) ? true : false;
+#if defined(RTC_TARGET)
+  bool enableAudioDevice = true;
+#else
+  bool enableAudioDevice = false;
+#endif
+
   initialFunc(enableAudioDevice, true, true);
 
   std::this_thread::sleep_for(std::chrono::milliseconds(739));
