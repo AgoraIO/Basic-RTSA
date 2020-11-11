@@ -23,7 +23,7 @@ set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR})
 
 add_definitions(-DCONFIG_POSIX)
 
-if(${SDK_LICENSE_ENABLE} STREQUAL "on")
+if(${SDK_LICENSE_ENABLE} AND ${SDK_LICENSE_ENABLE} STREQUAL "on")
     message("sdk license is enabled")
     add_definitions(-DSDK_LICENSE_ENABLED)
 endif()

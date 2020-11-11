@@ -151,7 +151,7 @@ void app_print_usage(int32_t argc, char **argv)
     LOGS("\nUsage: %s [OPTION]", argv[0]);
     LOGS(" -h, --help               : show help info");
     LOGS(" -i, --appId              : application id, either appId OR token MUST be set");
-    LOGS(" -t, --token              : token for authentication, MUST");
+    LOGS(" -t, --token              : token for authentication");
     LOGS(" -c, --channelId          : channel, default is 'demo'");
     LOGS(" -u, --userId             : user id, default is 0");
     LOGS(" -C, --certificateFile    : certificate file path, default is './%s'", DEFAULT_CERTIFACTE_FILENAME);
@@ -328,20 +328,20 @@ int32_t app_load_license_file(const char *path, char *buf, uint32_t *buf_len)
     int32_t rval = 0;
 
     if (*buf_len <= 0) {
-        LOGE("%s: invalid buffer length %d", TAG_APP, *buf_len);
+        LOGE("%s invalid buffer length %d", TAG_APP, *buf_len);
         goto EXIT;
     }
 
     int32_t fd = open(path, O_RDONLY);
     if (fd == INVALID_FD) {
         rval = -1;
-        LOGE("%s: open file failed, path=%s", TAG_APP, path);
+        LOGE("%s open file failed, path=%s", TAG_APP, path);
         goto EXIT;
     }
 
     rval = read(fd, buf, *buf_len);
     if (rval <= 0) {
-        LOGE("%s: read file failed, path=%s rval=%d", TAG_APP, path, rval);
+        LOGE("%s read file failed, path=%s rval=%d", TAG_APP, path, rval);
         goto EXIT;
     }
     *buf_len = rval;
@@ -367,14 +367,14 @@ static int32_t app_init(app_t *p_app)
     rval = media_parser_create(MEDIA_TYPE_VIDEO, p_config->video_codec, &p_app->video_parser_ptr);
     if (rval < 0 || !p_app->video_parser_ptr) {
         rval = -1;
-        LOGE("%s: obtain parser failed, rval=%d type=%d codec=%d", TAG_APP, rval, MEDIA_TYPE_VIDEO,
+        LOGE("%s obtain parser failed, rval=%d type=%d codec=%d", TAG_APP, rval, MEDIA_TYPE_VIDEO,
              p_config->video_codec);
         goto EXIT;
     }
 
     rval = p_app->video_parser_ptr->open(p_app->video_parser_ptr, p_config->video_send_media_path);
     if (rval < 0) {
-        LOGE("%s: parser open send file:%s failed, rval=%d", TAG_APP, p_config->video_send_media_path, rval);
+        LOGE("%s parser open send file:%s failed, rval=%d", TAG_APP, p_config->video_send_media_path, rval);
         goto EXIT;
     }
 
@@ -453,7 +453,12 @@ static int32_t app_send_audio(app_t *p_app)
     frame_t frame;
     int32_t rval = p_parser->obtain_frame(p_parser, &frame);
     if (rval < 0) {
-        LOGW("%s: obtain frame failed, rval=%d frame_len=%d", TAG_APP, rval, frame.len);
+        if (rval == -2) {
+            p_parser->reset(p_parser);
+            LOGI("%s reach the end of audio stream and rewind", TAG_APP);
+        } else {
+            LOGE("%s obtain audio frame failed, rval=%d frame_len=%d", TAG_APP, rval, frame.len);
+        }
         goto EXIT;
     }
 
@@ -479,7 +484,12 @@ static int32_t app_send_video(app_t *p_app)
     frame_t frame;
     int32_t rval = p_parser->obtain_frame(p_parser, &frame);
     if (rval < 0) {
-        LOGW("%s: obtain frame failed, rval=%d frame_len=%d", TAG_APP, rval, frame.len);
+        if (rval == -2) {
+            p_parser->reset(p_parser);
+            LOGI("%s reach the end of video stream and rewind", TAG_APP);
+        } else {
+            LOGE("%s obtain video frame failed, rval=%d frame_len=%d", TAG_APP, rval, frame.len);
+        }
         goto EXIT;
     }
 

@@ -86,9 +86,9 @@ typedef enum {
     /**
      * Token is invalid due to reasons belows:
      * - If application certificate is enabled on the Dashboard,
-     *   valid token SHOULD be set when invoke .
+     *   valid token SHOULD be set when invoke.
      *
-     * - If Uid field is mandatory, and users must set the same uid when setting the
+     * - If uid field is mandatory, and users must set the same uid when setting the
      *   uid parameter when calling `agora_rtc_join_channel`.
      */
     ERR_INVALID_TOKEN = 110,
@@ -98,13 +98,13 @@ typedef enum {
      */
     ERR_SET_CLIENT_ROLE_NOT_AUTHORIZED = 119,
 
-    /** Ticket to open the channel is invalid. */
+    /** Ticket to open channel is invalid */
     ERR_OPEN_CHANNEL_INVALID_TICKET = 121,
 
     /** Try another server. */
     ERR_OPEN_CHANNEL_TRY_NEXT_VOS = 122,
 
-    /** The client is banned by the server. */
+    /** Client is banned by the server */
     ERR_CLIENT_IS_BANNED_BY_SERVER = 123,
 } agora_err_code_e;
 
@@ -112,26 +112,43 @@ typedef enum {
  * The definition of the user_offline_reason_e enum.
  */
 typedef enum {
-    USER_OFFLINE_QUIT     = 0,    // Local user leaves channel actively
-    USER_OFFLINE_DROPPED  = 1,    // Remote user is dropped due to timeout
+    /**
+     * 0: Remote user leaves channel actively
+     */
+    USER_OFFLINE_QUIT     = 0,
+    /**
+     * 1: Remote user is dropped due to timeout
+     */
+    USER_OFFLINE_DROPPED  = 1,
 } user_offline_reason_e;
 
 /**
  * The definition of the video_codec_e enum.
  */
 typedef enum {
-    VIDEO_CODEC_H264     = 2,    // H264
-    VIDEO_CODEC_GENERIC  = 6,    // GENERIC
+    /**
+     * 2: h264
+     */
+    VIDEO_CODEC_H264     = 2,
+    /**
+     * 6: generic
+     */
+    VIDEO_CODEC_GENERIC  = 6,
 } video_codec_e;
 
 /**
  * The definition of the video_frame_e enum.
  */
 typedef enum {
+    /**
+     * 1: key frame
+     */
     VIDEO_FRAME_KEY    =  1,
+    /*
+     * 4: delta frame, e.g: P-Frame
+     */
     VIDEO_FRAME_DELTA  =  4,
 } video_frame_e;
-
 
 /**
  * The definition of the video_frame_rate_e enum.
@@ -193,10 +210,22 @@ typedef struct {
  * Audio codec type list.
  */
 typedef enum {
-    AUDIO_CODEC_OPUS     = 1,   // OPUS
-    AUDIO_CODEC_G722     = 5,   // G722
-    AUDIO_CODEC_AACLC    = 8,   // AACLC
-    AUDIO_CODEC_HEAAC    = 9,   // HEAAC
+    /**
+     * 1: OPUS
+     */
+    AUDIO_CODEC_OPUS     = 1,
+    /**
+     * 5: G722
+     */
+    AUDIO_CODEC_G722     = 5,
+    /**
+     * 8: AACLC
+     */
+    AUDIO_CODEC_AACLC    = 8,
+    /**
+     * 9: HEAAC
+     */
+    AUDIO_CODEC_HEAAC    = 9,
 } audio_codec_e;
 
 /**
@@ -204,7 +233,7 @@ typedef enum {
  */
 typedef struct {
     /**
-     * Audio codec: #audio_codec_e.
+     * Audio codec tepe, reference #audio_codec_e.
      */
     audio_codec_e  codec;
 } audio_frame_info_t;
@@ -265,7 +294,7 @@ typedef struct {
      * @param[in] channel Channel name
      * @param[in] uid     Remote user ID
      * @param[in] reason  Reason:
-     *                    - 0:   USER_OFFLINE_QUIT    remote user leaves channel
+     *                    - 0:   USER_OFFLINE_QUIT    remote user leaves channel actively
      *                    - 1:   USER_OFFLINE_DROPPED remote user is dropped when timeout
      */
     void (*on_user_offline)(const char *channel, uint32_t uid, int reason);
@@ -324,15 +353,14 @@ typedef struct {
       * @param[in] sent_ts      Timestamp (ms) for sending data
       * @param[in] codec        Video codec type
       * @param[in] stream_id    Video stream ID. Range is [0, 15]
-      * @param[in] is_key_frame Frame attribute:
+      * @param[in] is_key_frame Frame type:
       *                          - 0:        non-keyframe
       *                          - Non-ZERO: keyframe
       * @param[in] data_ptr     Video frame buffer
       * @param[in] data_len     Video frame buffer lenth (bytes)
       */
     void (*on_video_data)(const char *channel, uint32_t uid, uint16_t sent_ts, uint8_t codec,
-                          uint8_t stream_id, int is_key_frame, const void *data_ptr,
-                          size_t data_len);
+                          uint8_t stream_id, int is_key_frame, const void *data_ptr, size_t data_len);
 
     /**
       * Occur when RDT(reliable data tunnel) availability changed.
