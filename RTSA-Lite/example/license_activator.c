@@ -429,7 +429,7 @@ int32_t app_activate_license(app_t *p_app)
 
     int32_t sock_fd = socket(AF_INET, SOCK_STREAM, 0);
     struct sockaddr_in serv_addr;
-    bzero(&serv_addr, sizeof(serv_addr));
+    memset(&serv_addr, 0, sizeof(serv_addr));
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_port = htons(80);
     inet_pton(AF_INET, str_ip, &serv_addr.sin_addr);

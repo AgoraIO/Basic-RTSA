@@ -2,6 +2,7 @@
 
 build_op="build"
 license="on"
+build_type="release"
 
 # to clean
 build_files=("build" "hello_rtsa" "license_activator")
@@ -15,8 +16,13 @@ function cmake_build()
   if [ -d build ]; then
       rm -rf build
   fi
+  
+  if [ "$build_type" == "debug" ]; then
+    debug_flag="-DCMAKE_BUILD_TYPE=Debug "
+  fi
+  
   mkdir build && cd build \
-          && cmake $src -DCMAKE_TOOLCHAIN_FILE=$cur/toolchain.cmake -DSDK_LICENSE_ENABLE=${license} $* \
+          && cmake $src $debug_flag -DCMAKE_TOOLCHAIN_FILE=$cur/toolchain.cmake -DSDK_LICENSE_ENABLE=${license} $* \
           && make -j8 || return 1
   cd -
 }
@@ -36,12 +42,13 @@ function clean_build_files()
 
 function help()
 {
-    echo -e "$0 [-b <build_op>] [-l <license>]"
+    echo -e "$0 [-b <build_op>] [-l <license>] [-t <type>]"
     echo -e "\t -b <build_op>, build|clean|rebuild, default: build"
     echo -e "\t -l <license>, on|off, default: off"
+    echo -e "\t -t <type>, release|debug, default: release"
 }
 
-while getopts 'b:l:h' opt
+while getopts 'b:l:t:h' opt
 do
     case $opt in
         b)
@@ -49,6 +56,9 @@ do
         ;;
         l)
             license=${OPTARG}
+        ;;
+        t)
+            build_type=${OPTARG}
         ;;
         h)
         help

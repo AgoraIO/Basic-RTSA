@@ -226,6 +226,10 @@ typedef enum {
      * 9: HEAAC
      */
     AUDIO_CODEC_HEAAC    = 9,
+    /**
+     * 253: GENERIC
+     */
+     AUDIO_CODEC_GENERIC = 253,
 } audio_codec_e;
 
 /**
@@ -233,7 +237,7 @@ typedef enum {
  */
 typedef struct {
     /**
-     * Audio codec tepe, reference #audio_codec_e.
+     * Audio codec type, reference #audio_codec_e.
      */
     audio_codec_e  codec;
 } audio_frame_info_t;
@@ -243,40 +247,40 @@ typedef struct {
  */
 typedef struct {
     /**
-      * Occur when local user joins channel successfully.
-      *
-      * @param[in] channel    Channel name
-      * @param[in] elapsed_ms Time elapsed (ms) since channel is established
-      */
+     * Occur when local user joins channel successfully.
+     *
+     * @param[in] channel    Channel name
+     * @param[in] elapsed_ms Time elapsed (ms) since channel is established
+     */
     void (*on_join_channel_success)(const char *channel, int elapsed_ms);
 
     /**
-      * Occur when channel is disconnected with server.
-      *
-      * @param[in] channel Channel name
-      */
+     * Occur when channel is disconnected with server.
+     *
+     * @param[in] channel Channel name
+     */
     void (*on_connection_lost)(const char *channel);
 
     /**
-      * Occur when user rejoins channel successfully after disconnect
-      *
-      * When channel loses connection with server due to network problems,
-      * SDK will retry to connect automatically. If success, it will be triggered.
-      *
-      * @param[in] channel    Channel name
-      * @param[in] elapsed_ms Time elapsed (ms) since rejoin due to network
-      */
+     * Occur when user rejoins channel successfully after disconnect
+     *
+     * When channel loses connection with server due to network problems,
+     * SDK will retry to connect automatically. If success, it will be triggered.
+     *
+     * @param[in] channel    Channel name
+     * @param[in] elapsed_ms Time elapsed (ms) since rejoin due to network
+     */
     void (*on_rejoin_channel_success)(const char *channel, int elapsed_ms);
 
     /**
-      * Report error message during runtime.
-      *
-      * In most cases, it means SDK can't fix the issue and application should take action.
-      *
-      * @param[in] channel Channel name
-      * @param[in] code    Error code
-      * @param[in] msg     Error message
-      */
+     * Report error message during runtime.
+     *
+     * In most cases, it means SDK can't fix the issue and application should take action.
+     *
+     * @param[in] channel Channel name
+     * @param[in] code    Error code
+     * @param[in] msg     Error message
+     */
     void (*on_error)(const char *channel, int code, const char *msg);
 
     /**
@@ -305,126 +309,126 @@ typedef struct {
      * @param[in] channel Channel name
      * @param[in] uid     Remote user ID
      * @param[in] muted   Mute status:
-     *                    - 0:
-     *                    - non-ZERO: Muted
+     *                    - 0:        unmuted
+     *                    - non-ZERO: muted
      */
     void (*on_user_mute_audio)(const char *channel, uint32_t uid, int muted);
 
     /**
-      * Occur when a remote user sends notification before enable/disable sending video.
-      *
-      * @param[in] channel Channel name.
-      * @param[in] uid     Remote user ID
-      * @param[in] muted   Mute status:
-      *                    - 0:        Unmuted
-      *                    - non-ZERO: Muted
-      */
+     * Occur when a remote user sends notification before enable/disable sending video.
+     *
+     * @param[in] channel Channel name.
+     * @param[in] uid     Remote user ID
+     * @param[in] muted   Mute status:
+     *                    - 0:        unmuted
+     *                    - non-ZERO: muted
+     */
     void (*on_user_mute_video)(const char *channel, uint32_t uid, int muted);
 
     /**
-      * Occur when a remote user requests a keyframe.
-      *
-      * This callback notifies the sender to generate a new keyframe.
-      *
-      * @param[in] channel    Channel name
-      * @param[in] uid        Remote user ID
-      * @param[in] stream_id  Stream ID for which a keyframe is requested
-      */
+     * Occur when a remote user requests a keyframe.
+     *
+     * This callback notifies the sender to generate a new keyframe.
+     *
+     * @param[in] channel    Channel name
+     * @param[in] uid        Remote user ID
+     * @param[in] stream_id  Stream ID for which a keyframe is requested
+     */
     void (*on_key_frame_gen_req)(const char *channel, uint32_t uid, uint8_t stream_id);
 
     /**
-      * Occur when receiving the audio frame of a remote user in the channel.
-      *
-      * @param[in] channel    Channel name
-      * @param[in] uid        Remote user ID to which data is sent
-      * @param[in] ts_ms      Timestamp (ms) for sending data
-      * @param[in] codec      Audio codec type
-      * @param[in] data_ptr   Audio frame buffer
-      * @param[in] data_len   Audio frame buffer length (bytes)
-      */
+     * Occur when receiving the audio frame of a remote user in the channel.
+     *
+     * @param[in] channel    Channel name
+     * @param[in] uid        Remote user ID to which data is sent
+     * @param[in] ts_ms      Timestamp (ms) for sending data
+     * @param[in] codec      Audio codec type
+     * @param[in] data_ptr   Audio frame buffer
+     * @param[in] data_len   Audio frame buffer length (bytes)
+     */
     void (*on_audio_data)(const char *channel, uint32_t uid, uint16_t sent_ts, uint8_t codec,
                           const void *data_ptr, size_t data_len);
 
     /**
-      * Occur when receiving the video frame of a remote user in the channel.
-      *
-      * @param[in] channel      Channel name
-      * @param[in] uid          Remote user ID to which data is sent
-      * @param[in] sent_ts      Timestamp (ms) for sending data
-      * @param[in] codec        Video codec type
-      * @param[in] stream_id    Video stream ID. Range is [0, 15]
-      * @param[in] is_key_frame Frame type:
-      *                          - 0:        non-keyframe
-      *                          - Non-ZERO: keyframe
-      * @param[in] data_ptr     Video frame buffer
-      * @param[in] data_len     Video frame buffer lenth (bytes)
-      */
+     * Occur when receiving the video frame of a remote user in the channel.
+     *
+     * @param[in] channel      Channel name
+     * @param[in] uid          Remote user ID to which data is sent
+     * @param[in] sent_ts      Timestamp (ms) for sending data
+     * @param[in] codec        Video codec type
+     * @param[in] stream_id    Video stream ID. Range is [0, 15]
+     * @param[in] is_key_frame Frame type:
+     *                          - 0:        non-keyframe
+     *                          - non-ZERO: keyframe
+     * @param[in] data_ptr     Video frame buffer
+     * @param[in] data_len     Video frame buffer lenth (bytes)
+     */
     void (*on_video_data)(const char *channel, uint32_t uid, uint16_t sent_ts, uint8_t codec,
                           uint8_t stream_id, int is_key_frame, const void *data_ptr, size_t data_len);
 
     /**
-      * Occur when RDT(reliable data tunnel) availability changed.
-      *
-      * @note As an E2E tunnel, RDT is available only if there are just 2 users in a channel.
-      *
-      * @param[in] channel          Channel name
-      * @param[in] is_available     Available status:
-      *                             - 0:         NO
-      *                             - Non-ZERO:  available
-      */
+     * Occur when RDT(reliable data tunnel) availability changed.
+     *
+     * @note As an E2E tunnel, RDT is available only if there are just 2 users in a channel.
+     *
+     * @param[in] channel          Channel name
+     * @param[in] is_available     Available status:
+     *                             - 0:         unavailable
+     *                             - non-ZERO:  available
+     */
     void (*on_rdt_availability_changed)(const char *channel, int is_available);
 
     /**
-      * Occur when command comes from reliable data channel.
-      *
-      * @param[in] channel    Channel name
-      * @param[in] uid        Remote user ID
-      * @param[in] cmd        Command value
-      * @param[in] param_ptr  Parameter buffer, set NULL if non-exist
-      * @param[in] param_len  Parameter buffer length in bytes if exist
-      */
+     * Occur when command comes from reliable data channel.
+     *
+     * @param[in] channel    Channel name
+     * @param[in] uid        Remote user ID
+     * @param[in] cmd        Command value
+     * @param[in] param_ptr  Parameter buffer, set NULL if non-exist
+     * @param[in] param_len  Parameter buffer length in bytes if exist
+     */
     void (*on_cmd)(const char *channel, uint32_t uid, int cmd, const void *param_ptr,
                    size_t param_len);
 
     /**
-      * Occurs when data comes from reliable data channel.
-      *
-      * @param[in] channel The channel.
-      * @param[in] uid The user ID.
-      * @param[in] data The data.
-      * @param[in] data_len Length of the data.
-      */
-    void (*on_data_from_rdt)(const char *channel, uint32_t uid, const void *data, size_t data_len);
+     * Occurs when data comes from reliable data channel.
+     *
+     * @param[in] channel      Channel name
+     * @param[in] uid          Remote user ID
+     * @param[in] data_ptr     Data buffer
+     * @param[in] data_len     Data buffer length
+     */
+    void (*on_data_from_rdt)(const char *channel, uint32_t uid, const void *data_ptr, size_t data_len);
 
     /**
-      * Advise application to update encoder bitrate.
-      *
-      * @param[in] channel    Channel name
-      * @param[in] target_bps Target value (bps) by which the bitrate should update
-      */
+     * Advise application to update encoder bitrate.
+     *
+     * @param[in] channel    Channel name
+     * @param[in] target_bps Target value (bps) by which the bitrate should update
+     */
     void (*on_target_bitrate_changed)(const char *channel, uint32_t target_bps);
 
     /**
      * Occur when initialization completes with a given user name.
      *
-     * @param[in] uname Local user name provided on initialization
-     * @param[in] uid   Local user ID allocated by server
+     * @param[in] uname    Local user name provided on initialization
+     * @param[in] uid      Local user ID allocated by server
      */
     void (*on_local_user_registered)(const char *uname, uint32_t uid);
 
     /**
-      * Occur when remote user registered.
-      *
-      * @param[in] uname Remote user name
-      * @param[in] uid   Remote user ID
-      */
+     * Occur when remote user registered.
+     *
+     * @param[in] uname Remote user name
+     * @param[in] uid   Remote user ID
+     */
     void (*on_remote_user_registered)(const char *uname, uint32_t uid);
 } agora_rtc_event_handler_t;
 
 /**
  * Get SDK version.
  *
- * @return A const static string describes the SDK version.
+ * @return A const static string describes the SDK version
  */
 extern const char *agora_get_version(void);
 
@@ -433,9 +437,9 @@ extern const char *agora_get_version(void);
  *
  * @note You do not have to release the string after use.
  *
- * @param[in] err Error code.
+ * @param[in] err Error code
  *
- * @return Const static error string .
+ * @return Const static error string
  */
 extern __agora_api__ const char *agora_err_2_str(int err);
 
@@ -539,8 +543,8 @@ extern __agora_api__ int agora_rtc_set_log_level(int level);
 /**
  * Set the log file configuration.
  *
- * @param[in] size_per_file     Each log file size (bytes). Range is [10000, 1000000]
- * @param[in] max_file_count  Maxium log file count. Range is [1, 100]
+ * @param[in] size_per_file   Each log file size (bytes). Range is [10000, 1000000]
+ * @param[in] max_file_count  Maxium log file count for rollback. Range is [1, 100]
  *
  * @return
  * - = 0: Success
@@ -718,10 +722,11 @@ extern __agora_api__ int agora_rtc_send_audio_data(const char *channel, const vo
  * @param[in] channel   Channel name
  *                      - NULL     for all channels
  *                      - non-NULL for specific channel
- * @param[in] stream_id Stream ID, MUST 0 currently.
+ * @param[in] stream_id Stream ID
  * @param[in] data_ptr  Video frame buffer
  * @param[in] data_len  Video frame buffer length (bytes)
  * @param[in] info_ptr  Video frame info
+ *
  * @return
  * - = 0: Success
  * - < 0: Failure
@@ -748,7 +753,7 @@ extern __agora_api__ int agora_rtc_send_cmd(const char *channel, int cmd, const 
                                             size_t param_len);
 
 /**
- * Send data through reliable data channel (rdt).
+ * Send data through reliable data channel (RDT).
  *
  * @note Reliable data channel is not available by default, unless callback
  *      `on_rdt_availability_changed` occurs.
@@ -765,11 +770,11 @@ extern __agora_api__ int agora_rtc_send_through_rdt(const char *channel, const v
                                                     size_t data_len);
 
 /**
- * Set network bandwdith estimation (bwe) param
+ * Set network bandwdith estimation (BWE) param
  *
- * @param[in] min_bps   : bwe min bps
- * @param[in] max_bps   : bwe max bps
- * @param[in] start_bps : bwe start bps
+ * @param[in] min_bps   bwe min bps
+ * @param[in] max_bps   bwe max bps
+ * @param[in] start_bps bwe start bps
  *
  * @return:
  * - = 0: Success
@@ -778,7 +783,7 @@ extern __agora_api__ int agora_rtc_send_through_rdt(const char *channel, const v
 extern __agora_api__ int agora_rtc_set_bwe_param(uint32_t min_bps, uint32_t max_bps, uint32_t start_bps);
 
 /**
- * Local user leaves channel.
+ * Allow Local user leaves channel.
  *
  * @note Local user should leave channel when data transmission is stopped
  *

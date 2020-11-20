@@ -591,6 +591,16 @@ static void __on_target_bitrate_changed(const char *channel, uint32_t target_bps
     LOGD("%s ch=%s target_bps=%u", TAG_EVENT, channel, target_bps);
 }
 
+static void __on_connection_lost(const char *channel)
+{
+    LOGD("%s ch=%s", TAG_EVENT, channel);
+}
+
+static void __on_rejoin_channel_success(const char *channel, int elapsed_ms)
+{
+    LOGD("%s ch=%s elapsed_ms=%d", TAG_EVENT, channel, elapsed_ms);
+}
+
 static agora_rtc_event_handler_t event_handler = {
     .on_join_channel_success     = __on_join_channel_success,
     .on_error                    = __on_error,
@@ -602,6 +612,8 @@ static agora_rtc_event_handler_t event_handler = {
     .on_rdt_availability_changed = __on_rdt_availability_changed,
     .on_cmd                      = __on_cmd,
     .on_target_bitrate_changed   = __on_target_bitrate_changed,
+    .on_connection_lost          = __on_connection_lost,
+    .on_rejoin_channel_success   = __on_rejoin_channel_success,
 };
 
 int32_t main(int32_t argc, char **argv)
@@ -644,6 +656,7 @@ int32_t main(int32_t argc, char **argv)
     // 4. API: join channel
     int32_t token_len = strlen(p_config->p_token);
     void *p_token = (void *)(token_len == 0 ? NULL : p_config->p_token);
+
     rval = agora_rtc_join_channel(p_config->p_channel, p_token, token_len);
     if (rval < 0) {
         LOGE("%s join channel %s failed, rval=%d error=%s", TAG_API, p_config->p_channel, rval, agora_err_2_str(rval));
@@ -652,7 +665,7 @@ int32_t main(int32_t argc, char **argv)
 
     // 5. wait until join channel success or Ctrl-C trigger stop
     while (1) {
-        if (p_app->b_stop_flag || !p_app->b_join_success_flag) {
+        if (p_app->b_stop_flag || p_app->b_join_success_flag) {
             break;
         }
         app_sleep_ms(10);
@@ -716,6 +729,5 @@ int32_t main(int32_t argc, char **argv)
 EXIT:
     // 9. app deinit
     app_deinit(p_app);
-
     return rval;
 }

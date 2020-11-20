@@ -35,7 +35,7 @@ include_directories(${CMAKE_SOURCE_DIR}/../third-party/media_parser/include)
 link_directories(${CMAKE_SOURCE_DIR}/../third-party/media_parser/lib)
 
 add_executable(hello_rtsa hello_rtsa.c)
-target_link_libraries(hello_rtsa agora-rtc-sdk media_parser)
+target_link_libraries(hello_rtsa agora-rtc-sdk media_parser pthread dl rt)
 
 
 include_directories(${CMAKE_SOURCE_DIR}/../third-party/http_parser/include)
@@ -43,6 +43,6 @@ include_directories(${CMAKE_SOURCE_DIR}/../third-party/json_parser/include)
 link_directories(${CMAKE_SOURCE_DIR}/../third-party/http_parser/lib)
 
 add_executable(license_activator license_activator.c)
-target_link_libraries(license_activator agora-rtc-sdk http_parser)
+target_link_libraries(license_activator agora-rtc-sdk http_parser pthread dl rt)
 
 
