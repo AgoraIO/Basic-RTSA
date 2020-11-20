@@ -137,7 +137,7 @@ typedef enum {
 } video_codec_e;
 
 /**
- * The definition of the video_frame_e enum.
+ * The definition of the video_frame_type_e enum.
  */
 typedef enum {
     /**
@@ -148,7 +148,7 @@ typedef enum {
      * 4: delta frame, e.g: P-Frame
      */
     VIDEO_FRAME_DELTA  =  4,
-} video_frame_e;
+} video_frame_type_e;
 
 /**
  * The definition of the video_frame_rate_e enum.
@@ -193,14 +193,14 @@ typedef struct {
      */
     video_codec_e  codec;
     /**
-     * The frame type of the encoded video frame: #video_frame_e.
+     * The frame type of the encoded video frame: #video_frame_type_e.
      */
-    video_frame_e  type;
+    video_frame_type_e  type;
     /**
      * The number of video frames per second.
-     * This value will be used for calculating timestamps of the encoded image.
-     * If frame_per_sec equals zero, then real timestamp will be used.
-     * Otherwise, timestamp will be adjusted to the value of frame_per_sec set.
+     * -This value will be used for calculating timestamps of the encoded image.
+     * - If frame_per_sec equals zero, then real timestamp will be used.
+     * - Otherwise, timestamp will be adjusted to the value of frame_per_sec set.
      */
     video_frame_rate_e frames_per_sec;
 } video_frame_info_t;
@@ -278,13 +278,13 @@ typedef struct {
      * In most cases, it means SDK can't fix the issue and application should take action.
      *
      * @param[in] channel Channel name
-     * @param[in] code    Error code
+     * @param[in] code    Error code, see #agora_err_code_e
      * @param[in] msg     Error message
      */
     void (*on_error)(const char *channel, int code, const char *msg);
 
     /**
-     * Occur when remote user joins channel succesfully.
+     * Occur when remote user joins channel successfully.
      *
      * @param[in] channel    Channel name
      * @param[in] uid        Remote user ID
@@ -297,9 +297,7 @@ typedef struct {
      *
      * @param[in] channel Channel name
      * @param[in] uid     Remote user ID
-     * @param[in] reason  Reason:
-     *                    - 0:   USER_OFFLINE_QUIT    remote user leaves channel actively
-     *                    - 1:   USER_OFFLINE_DROPPED remote user is dropped when timeout
+     * @param[in] reason  Reason, see #user_offline_reason_e
      */
     void (*on_user_offline)(const char *channel, uint32_t uid, int reason);
 
@@ -341,7 +339,7 @@ typedef struct {
      *
      * @param[in] channel    Channel name
      * @param[in] uid        Remote user ID to which data is sent
-     * @param[in] ts_ms      Timestamp (ms) for sending data
+     * @param[in] sent_ts    Timestamp (ms) for sending data
      * @param[in] codec      Audio codec type
      * @param[in] data_ptr   Audio frame buffer
      * @param[in] data_len   Audio frame buffer length (bytes)
@@ -430,7 +428,7 @@ typedef struct {
  *
  * @return A const static string describes the SDK version
  */
-extern const char *agora_get_version(void);
+extern const char *agora_rtc_get_version(void);
 
 /**
  * Convert error code to const static string.
@@ -441,7 +439,7 @@ extern const char *agora_get_version(void);
  *
  * @return Const static error string
  */
-extern __agora_api__ const char *agora_err_2_str(int err);
+extern __agora_api__ const char *agora_rtc_err_2_str(int err);
 
 /**
  * Generate a credential which is a unique device identifier.
@@ -461,10 +459,11 @@ extern __agora_api__ int agora_rtc_license_gen_credential(char *credential, unsi
 /**
  * Authenticate the SDK licence.
  *
- * @note It's authorizing smart devices license.
- *       You can disregard it if you do not use a license.
- *       Once the license is enabled, only the authenticated SDK can be used.
- *       NOTICE: This API should be invoked before agora_rtc_init
+ * @note
+ * - It's authorizing smart devices license.
+ *   You can disregard it if you do not use a license.
+ *   Once the license is enabled, only the authenticated SDK can be used.
+ * - This API should be invoked before agora_rtc_init
  *
  * @param[in] certificate     Certificate buffer
  * @param[in] certificate_len Certificate buffer length
@@ -770,7 +769,7 @@ extern __agora_api__ int agora_rtc_send_through_rdt(const char *channel, const v
                                                     size_t data_len);
 
 /**
- * Set network bandwdith estimation (BWE) param
+ * Set network bandwidth estimation (BWE) param
  *
  * @param[in] min_bps   bwe min bps
  * @param[in] max_bps   bwe max bps
@@ -798,7 +797,7 @@ extern __agora_api__ int agora_rtc_set_bwe_param(uint32_t min_bps, uint32_t max_
 extern __agora_api__ int agora_rtc_leave_channel(const char *channel);
 
 /**
- * Release all resource allocated by Agora RTC SDK
+ * Release all resource allocated by Agora RTSA SDK
  *
  * @return
  * - = 0: Success

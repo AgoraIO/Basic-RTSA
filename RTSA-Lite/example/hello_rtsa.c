@@ -534,7 +534,19 @@ static void __on_join_channel_success(const char *channel, int32_t elapsed)
 
 static void __on_error(const char *channel, int code, const char *msg)
 {
-    LOGD("%s ch=%s code=%u msg=%s", TAG_EVENT, channel, code, msg);
+    app_t *p_app = app_get_instance();
+    if (code == ERR_INVALID_APP_ID) {
+        p_app->b_stop_flag = 1;
+        LOGE("%s invalid appId, please double-check, code=%u msg=%s", TAG_EVENT, code, msg);
+    } else if (code == ERR_INVALID_CHANNEL_NAME) {
+        p_app->b_stop_flag = 1;
+        LOGE("%s invalid channel, please double-check, ch=%s code=%u msg=%s", TAG_EVENT, channel, code, msg);
+    } else if (code == ERR_INVALID_TOKEN || code == ERR_TOKEN_EXPIRED) {
+        p_app->b_stop_flag = 1;
+        LOGE("%s invalid token, please double-check, code=%u msg=%s", TAG_EVENT, code, msg);
+    } else {
+        LOGW("%s ch=%s code=%u msg=%s", TAG_EVENT, channel, code, msg);
+    }
 }
 
 static void __on_key_frame_gen_req(const char *channel, uint32_t uid, uint8_t stream_id)
@@ -628,6 +640,8 @@ int32_t main(int32_t argc, char **argv)
         goto EXIT;
     }
 
+    LOGS("%s Welcome to RTSA SDK v%s", TAG_APP, agora_rtc_get_version());
+
     // 1. app init
     rval = app_init(p_app);
     if (rval < 0) {
@@ -639,7 +653,7 @@ int32_t main(int32_t argc, char **argv)
     // 2. API: verify license
     rval = agora_rtc_license_verify(p_app->str_certificate, p_app->str_certificate_len, p_app->str_credential, p_app->str_credential_len);
     if (rval < 0) {
-        LOGE("%s verify license failed, pls confirm, rval=%d error=%s", TAG_API, rval, agora_err_2_str(rval));
+        LOGE("%s verify license failed, pls confirm, rval=%d error=%s", TAG_API, rval, agora_rtc_err_2_str(rval));
         goto EXIT;
     }
 #endif
@@ -649,7 +663,7 @@ int32_t main(int32_t argc, char **argv)
     void *p_appid = (void *)(appid_len == 0 ? NULL : p_config->p_appid);
     rval = agora_rtc_init(p_appid, p_config->uid, &event_handler, p_config->p_sdk_log_dir);
     if (rval < 0) {
-        LOGE("%s agora sdk init failed, rval=%d error=%s", TAG_API, rval, agora_err_2_str(rval));
+        LOGE("%s agora sdk init failed, rval=%d error=%s", TAG_API, rval, agora_rtc_err_2_str(rval));
         goto EXIT;
     }
 
@@ -659,7 +673,7 @@ int32_t main(int32_t argc, char **argv)
 
     rval = agora_rtc_join_channel(p_config->p_channel, p_token, token_len);
     if (rval < 0) {
-        LOGE("%s join channel %s failed, rval=%d error=%s", TAG_API, p_config->p_channel, rval, agora_err_2_str(rval));
+        LOGE("%s join channel %s failed, rval=%d error=%s", TAG_API, p_config->p_channel, rval, agora_rtc_err_2_str(rval));
         goto EXIT;
     }
 

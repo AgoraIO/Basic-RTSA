@@ -16,8 +16,6 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-#define FILE_PATH_MAX_LEN        512
-
 typedef struct media_parser_s media_parser_t;
 
 typedef struct {
