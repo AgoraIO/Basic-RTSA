@@ -16,7 +16,6 @@
 #include <fcntl.h>
 
 #include <arpa/inet.h>
-// #include <assert.h>
 #include <errno.h>
 #include <netinet/in.h>
 #include <sys/types.h>
@@ -43,7 +42,7 @@
 #define INVALID_FD                  -1
 #define MAX_TOKENS_COUNT            16
 #define MAX_BUF_LEN                 1024
-
+#define HTTP_MAX_BUF_LEN            4096
 #define APPID_MAX_LEN               64
 #define CUSTOMER_KEY_MAX_LEN        64
 #define CUSTOMER_SECRET_MAX_LEN     64
@@ -413,6 +412,7 @@ int32_t app_activate_license(app_t *p_app)
         LOGS("!!! please check whether your SDK supports license feature");
         goto EXIT;
     }
+    LOGS("%s generate credential\nlen:%d\nstr:%s", TAG_APP, p_app->str_credential_len, p_app->str_credential);
 
     char str_hostname[] = "api.agora.io";
     struct hostent *p_hostent = gethostbyname(str_hostname);
@@ -424,7 +424,7 @@ int32_t app_activate_license(app_t *p_app)
     }
 
     char **pptr = p_hostent->h_addr_list;
-    char str_ip[50];
+    char str_ip[129];
     inet_ntop(p_hostent->h_addrtype, *pptr, str_ip, sizeof(str_ip));
 
     int32_t sock_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -454,8 +454,8 @@ int32_t app_activate_license(app_t *p_app)
     snprintf(str_authorization, MAX_BUF_LEN, "%s:%s", p_app->str_customer_key, p_app->str_customer_secret);
     base64_encode(str_authorization, strlen(str_authorization), str_authorization_base64);
 
-    char buffer[MAX_BUF_LEN];
-    int32_t buffer_len = snprintf(buffer, MAX_BUF_LEN,
+    char http_buffer[HTTP_MAX_BUF_LEN];
+    int32_t http_buffer_len = snprintf(http_buffer, HTTP_MAX_BUF_LEN,
                             "POST %s HTTP/1.1\r\n"
                             "Authorization: Basic %s\r\n"
                             "Host: %s\r\n"
@@ -464,9 +464,9 @@ int32_t app_activate_license(app_t *p_app)
                             "Content-length: %d\r\n\r\n"
                             "%s",
                             str_page, str_authorization_base64, str_hostname, str_post_len, str_post);
-    // LOGS("SEND len=%d\n%s", buffer_len, buffer);
+    // LOGS("SEND len=%d\n%s", http_buffer_len, http_buffer);
 
-    rval = write(sock_fd, buffer, buffer_len);
+    rval = write(sock_fd, http_buffer, http_buffer_len);
     if (rval <= 0) {
         rval = -1;
         LOGE("%s send license activate request failed", TAG_APP);
@@ -487,47 +487,46 @@ int32_t app_activate_license(app_t *p_app)
         goto EXIT;
     }
 
-    rval = read(sock_fd, buffer, MAX_BUF_LEN);
+    rval = read(sock_fd, http_buffer, HTTP_MAX_BUF_LEN);
     if (rval <= 0) {
         rval = -1;
         LOGE("%s recv license activate request failed", TAG_APP);
         goto EXIT;
     }
-    buffer_len = rval;
-    buffer[buffer_len] = '\0';
-    // LOGS("RECV len=%d\n%s", buffer_len, buffer);
+    http_buffer_len = rval;
+    http_buffer[http_buffer_len] = '\0';
+    // LOGS("RECV len=%d\n%s", http_buffer_len, http_buffer);
 
     http_parser_settings http_activation_settings = { 0 };
     http_activation_settings.on_body = _http_on_body;
 
     p_app->http_parser.data = (void*)p_app;
     http_parser_init(&p_app->http_parser, HTTP_RESPONSE);
-    http_parser_execute(&p_app->http_parser, &http_activation_settings, buffer, buffer_len);
-
+    http_parser_execute(&p_app->http_parser, &http_activation_settings, http_buffer, http_buffer_len);
     if (!p_app->b_activate_success) {
         rval = -1;
         LOGE("%s activate failed", TAG_APP);
         LOGE("%s result: %s", TAG_APP, p_app->str_activate_result);
         goto EXIT;
     }
-
     LOGS("%s activate success", TAG_APP);
 
-    snprintf(buffer, MAX_BUF_LEN, "%s/%s", p_config->p_certificate_dir, CREDENTIAL_FILENAME);
-    rval = app_save_license_file(buffer, p_app->str_credential, &p_app->str_credential_len);
+    char str_file[MAX_BUF_LEN];
+    snprintf(str_file, MAX_BUF_LEN, "%s/%s", p_config->p_certificate_dir, CREDENTIAL_FILENAME);
+    rval = app_save_license_file(str_file, p_app->str_credential, &p_app->str_credential_len);
     if (rval != 0) {
-        LOGE("%s save credential failed, path=%s", TAG_APP, buffer);
+        LOGE("%s save credential failed, path=%s", TAG_APP, str_file);
         goto EXIT;
     }
-    LOGS("Generated credential is saved at:  %s", buffer);
+    LOGS("Generated credential is saved at:  %s", str_file);
 
-    snprintf(buffer, MAX_BUF_LEN, "%s/%s", p_config->p_certificate_dir, CERTIFACTE_FILENAME);
-    rval = app_save_license_file(buffer, p_app->str_certificate, &p_app->str_certificate_len);
+    snprintf(str_file, MAX_BUF_LEN, "%s/%s", p_config->p_certificate_dir, CERTIFACTE_FILENAME);
+    rval = app_save_license_file(str_file, p_app->str_certificate, &p_app->str_certificate_len);
     if (rval != 0) {
-        LOGE("%s save certificate failed, path=%s", TAG_APP, buffer);
+        LOGE("%s save certificate failed, path=%s", TAG_APP, str_file);
         goto EXIT;
     }
-    LOGS("Generated certificate is saved at: %s", buffer);
+    LOGS("Generated certificate is saved at: %s", str_file);
 
     LOGS("\n--------------  IMPORTANT HINT  ---------------");
     LOGS("!!! Please keep your own unique credential");
