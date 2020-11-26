@@ -404,6 +404,7 @@ int32_t app_activate_license(app_t *p_app)
     // https://docs-preview.agoralab.co/cn/Agora%20Platform/license_mechanism_v3?platform=All%20Platforms
 
     app_config_t *p_config = &p_app->config;
+    struct addrinfo *p_addinfo = NULL;
 
     int32_t rval = agora_rtc_license_gen_credential(p_app->str_credential, &p_app->str_credential_len);
     if (rval != 0) {
@@ -414,18 +415,33 @@ int32_t app_activate_license(app_t *p_app)
     }
     LOGS("%s generate credential\nlen:%d\nstr:%s", TAG_APP, p_app->str_credential_len, p_app->str_credential);
 
+    struct addrinfo hints;
+    memset(&hints, 0, sizeof(struct addrinfo));
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_flags = AI_CANONNAME;
+    hints.ai_protocol = 0;
+
     char str_hostname[] = "api.agora.io";
-    struct hostent *p_hostent = gethostbyname(str_hostname);
-    if (p_hostent == NULL
-     || p_hostent->h_addrtype != AF_INET
-     || p_hostent->h_addr_list == NULL) {
+    rval = getaddrinfo(str_hostname, NULL, &hints, &p_addinfo);
+    if(rval != 0) {
         LOGE("%s dns parser failed", TAG_APP);
         goto EXIT;
     }
 
-    char **pptr = p_hostent->h_addr_list;
-    char str_ip[129];
-    inet_ntop(p_hostent->h_addrtype, *pptr, str_ip, sizeof(str_ip));
+    char str_ip[129] = "";
+    for (struct addrinfo *res_p = p_addinfo; res_p != NULL; res_p = res_p->ai_next) {
+        rval = getnameinfo(res_p->ai_addr, res_p->ai_addrlen, str_ip, sizeof(str_ip), NULL, 0, NI_NUMERICHOST);
+        if(rval == 0) {
+            break;
+        }
+    }
+
+    if (strcmp(str_ip, "") == 0) {
+        rval = -1;
+        LOGE("%s dns parser can't get valid ip", TAG_APP);
+        goto EXIT;
+    }
 
     int32_t sock_fd = socket(AF_INET, SOCK_STREAM, 0);
     struct sockaddr_in serv_addr;
@@ -534,6 +550,10 @@ int32_t app_activate_license(app_t *p_app)
     LOGS("-----------------------------------------------");
 
 EXIT:
+    if (p_addinfo) {
+        freeaddrinfo(p_addinfo);
+    }
+
     if (sock_fd > 0) {
         close(sock_fd);
         sock_fd = INVALID_FD;
